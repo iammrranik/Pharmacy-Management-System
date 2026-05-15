@@ -15,7 +15,9 @@ public interface IOrderService {
     List<Order> findOrdersByStatus(OrderStatus status);
     List<Order> findAllOrders();
     List<Order> findAllOrdersByPage(int pageNo, int pageSize);
-    long countOrders();
+    int countOrders();
     Order updateOrder(Order order);
     void deleteOrder(int id);
+    Order updateOrderStatus(int id, OrderStatus status);
+    Order returnMedicine(int id);
 }

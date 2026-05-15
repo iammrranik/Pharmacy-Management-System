@@ -13,10 +13,16 @@ public class OrderMapper implements RowMapper<Order> {
     public Order mapRow(ResultSet rs, int rowNum) throws SQLException {
         return new Order(
                 rs.getInt("id"),
+                rs.getInt("customer_id"),
                 rs.getString("customer_phone"),
                 rs.getTimestamp("order_date_time").toLocalDateTime(),
+                rs.getTimestamp("return_date_time") != null
+                        ? rs.getTimestamp("return_date_time").toLocalDateTime()
+                        : null,
                 rs.getFloat("total_amount"),
-                OrderStatus.valueOf(rs.getString("status"))
+                rs.getFloat("refund_amount"),
+                OrderStatus.valueOf(rs.getString("status")),
+                rs.getInt("seller_id")
         );
     }
 }

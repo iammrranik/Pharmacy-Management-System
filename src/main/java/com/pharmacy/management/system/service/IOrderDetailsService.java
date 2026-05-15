@@ -11,7 +11,7 @@ public interface IOrderDetailsService {
     List<OrderDetails> findOrderDetailsByOrderId(int orderId);
     List<OrderDetails> findAllOrderDetails();
     List<OrderDetails> findAllOrderDetailsByPage(int pageNo, int pageSize);
-    long countOrderDetails();
+    int countOrderDetails();
     OrderDetails updateOrderDetails(OrderDetails orderDetails);
     void deleteOrderDetails(int id);
     void deleteOrderDetailsByOrderId(int orderId);

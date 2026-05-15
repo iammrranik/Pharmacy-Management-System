@@ -12,7 +12,7 @@ public interface ISupplierService {
     List<Supplier> findSuppliersByName(String supplierName);
     List<Supplier> findAllSuppliers();
     List<Supplier> findAllSuppliersByPage(int pageNo, int pageSize);
-    long countSuppliers();
+    int countSuppliers();
     Supplier updateSupplier(Supplier supplier);
     void deleteSupplier(int id);
     void deleteSupplierByPhone(String phone);

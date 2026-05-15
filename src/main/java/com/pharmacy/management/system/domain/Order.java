@@ -6,18 +6,27 @@ import java.time.LocalDateTime;
 
 public class Order {
     private int id;
+    private int customerId;
     private String customerPhone;
     private LocalDateTime orderDateTime;
+    private LocalDateTime returnDateTime;
     private float totalAmount;
+    private float refundAmount = 0;
     private OrderStatus status;
+    private int sellerId;
 
-    public Order(int id, String customerPhone, LocalDateTime orderDateTime,
-                 float totalAmount, OrderStatus status) {
+    public Order(int id, int customerId, String customerPhone, LocalDateTime orderDateTime,
+                 LocalDateTime returnDateTime, float totalAmount, float refundAmount,
+                 OrderStatus status, int sellerId) {
         this.setId(id);
+        this.setCustomerId(customerId);
         this.setCustomerPhone(customerPhone);
         this.setOrderDateTime(orderDateTime);
+        this.setReturnDateTime(returnDateTime);
         this.setTotalAmount(totalAmount);
+        this.setRefundAmount(refundAmount);
         this.setStatus(status);
+        this.setSellerId(sellerId);
     }
 
     public int getId() {
@@ -26,6 +35,14 @@ public class Order {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public int getCustomerId() {
+        return customerId;
+    }
+
+    public void setCustomerId(int customerId) {
+        this.customerId = customerId;
     }
 
     public String getCustomerPhone() {
@@ -44,12 +61,28 @@ public class Order {
         this.orderDateTime = orderDateTime;
     }
 
+    public LocalDateTime getReturnDateTime() {
+        return returnDateTime;
+    }
+
+    public void setReturnDateTime(LocalDateTime returnDateTime) {
+        this.returnDateTime = returnDateTime;
+    }
+
     public float getTotalAmount() {
         return totalAmount;
     }
 
     public void setTotalAmount(float totalAmount) {
         this.totalAmount = totalAmount;
+    }
+
+    public float getRefundAmount() {
+        return refundAmount;
+    }
+
+    public void setRefundAmount(float refundAmount) {
+        this.refundAmount = refundAmount;
     }
 
     public OrderStatus getStatus() {
@@ -60,10 +93,20 @@ public class Order {
         this.status = status;
     }
 
+    public int getSellerId() {
+        return sellerId;
+    }
+
+    public void setSellerId(int sellerId) {
+        this.sellerId = sellerId;
+    }
+
     @Override
     public String toString() {
-        return "Order{" + "id=" + id + ", customerPhone=" + customerPhone +
-                ", orderDateTime=" + orderDateTime + ", totalAmount=" + totalAmount +
-                ", status=" + status + '}';
+        return "Order{" + "id=" + id + ", customerId=" + customerId +
+                ", customerPhone=" + customerPhone + ", orderDateTime=" + orderDateTime +
+                ", returnDateTime=" + returnDateTime + ", totalAmount=" + totalAmount +
+                ", refundAmount=" + refundAmount + ", status=" + status +
+                ", sellerId=" + sellerId + '}';
     }
 }

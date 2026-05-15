@@ -24,14 +24,22 @@ public class OrderRepository implements IOrderRepository {
     @Override
     public int save(Order order) {
         String sql = """
-                INSERT INTO orders (customer_phone, order_date_time, total_amount, status)
-                VALUES (:customerPhone, :orderDateTime, :totalAmount, :status)
+                INSERT INTO orders (customer_id, customer_phone, order_date_time,
+                                    return_date_time, total_amount, refund_amount,
+                                    status, seller_id)
+                VALUES (:customerId, :customerPhone, :orderDateTime,
+                        :returnDateTime, :totalAmount, :refundAmount,
+                        :status, :sellerId)
                 """;
         MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValue("customerId", order.getCustomerId());
         params.addValue("customerPhone", order.getCustomerPhone());
         params.addValue("orderDateTime", order.getOrderDateTime());
+        params.addValue("returnDateTime", order.getReturnDateTime());
         params.addValue("totalAmount", order.getTotalAmount());
+        params.addValue("refundAmount", order.getRefundAmount());
         params.addValue("status", order.getStatus().name());
+        params.addValue("sellerId", order.getSellerId());
 
         System.out.println("[OrderRepository] save called for customer: " + order.getCustomerPhone());
         return namedParameterJdbcTemplate.update(sql, params);
@@ -119,18 +127,26 @@ public class OrderRepository implements IOrderRepository {
     public int update(Order order) {
         String sql = """
                 UPDATE orders
-                SET customer_phone = :customerPhone,
+                SET customer_id = :customerId,
+                    customer_phone = :customerPhone,
                     order_date_time = :orderDateTime,
+                    return_date_time = :returnDateTime,
                     total_amount = :totalAmount,
-                    status = :status
+                    refund_amount = :refundAmount,
+                    status = :status,
+                    seller_id = :sellerId
                 WHERE id = :id
                 """;
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("id", order.getId());
+        params.addValue("customerId", order.getCustomerId());
         params.addValue("customerPhone", order.getCustomerPhone());
         params.addValue("orderDateTime", order.getOrderDateTime());
+        params.addValue("returnDateTime", order.getReturnDateTime());
         params.addValue("totalAmount", order.getTotalAmount());
+        params.addValue("refundAmount", order.getRefundAmount());
         params.addValue("status", order.getStatus().name());
+        params.addValue("sellerId", order.getSellerId());
 
         System.out.println("[OrderRepository] update called for id: " + order.getId());
         return namedParameterJdbcTemplate.update(sql, params);

@@ -12,7 +12,7 @@ public interface IUserService {
     Optional<User> findUserByUsername(String username);
     List<User> findAllUsers();
     List<User> findAllUsersByPage(int pageNo, int pageSize);
-    long countUsers();
+    int countUsers();
     User updateUser(User user);
     void deleteUser(int id);
     void deleteUserByPhone(String phone);

@@ -15,7 +15,7 @@ public interface IMedicineService {
     List<Medicine> findMedicinesByBatchId(int batchId);
     List<Medicine> findAllMedicines();
     List<Medicine> findAllMedicinesByPage(int pageNo, int pageSize);
-    long countMedicines();
+    int countMedicines();
     Medicine updateMedicine(Medicine medicine);
     void deleteMedicine(int id);
     List<Medicine> findLowStockMedicines(int quantity);
