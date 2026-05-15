@@ -21,5 +21,6 @@ public interface IMedicineRepository {
     List<Medicine> findLowStockMedicines(int quantity);
     List<Medicine> findExpiredMedicines();
     List<Medicine> findExpiredMedicines(int days);
+    int updateMedicineQuantity(int medicineId, int quantity);
 
 }

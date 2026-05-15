@@ -228,4 +228,18 @@ public class MedicineRepository implements IMedicineRepository {
         System.out.println("[MedicineRepository] findExpiredMedicines called for days: " + days);
         return namedParameterJdbcTemplate.query(sql, params, medicineMapper);
     }
+
+    @Override
+    public int updateMedicineQuantity(int medicineId, int quantity) {
+        String sql = """
+                UPDATE medicines
+                SET available_quantity = :quantity
+                WHERE id = :id
+                """;
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValue("id", medicineId);
+        params.addValue("quantity", quantity);
+        System.out.println("[MedicineRepository] updateMedicineQuantity called for id: " + medicineId + ", quantity: " + quantity);
+        return namedParameterJdbcTemplate.update(sql, params);
+    }
 }
