@@ -1,4 +1,4 @@
-package com.pharmacy.management.system.entity;
+package com.pharmacy.management.system.domain;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
