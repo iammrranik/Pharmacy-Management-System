@@ -1,7 +1,12 @@
 package com.pharmacy.management.system.service.implementation;
 
+import com.pharmacy.management.system.domain.Medicine;
+import com.pharmacy.management.system.domain.Order;
 import com.pharmacy.management.system.domain.OrderDetails;
+import com.pharmacy.management.system.domain.enums.OrderStatus;
+import com.pharmacy.management.system.repository.implementation.MedicineRepository;
 import com.pharmacy.management.system.repository.implementation.OrderDetailsRepository;
+import com.pharmacy.management.system.repository.implementation.OrderRepository;
 import com.pharmacy.management.system.service.IOrderDetailsService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,9 +17,15 @@ import java.util.Optional;
 @Service
 public class OrderDetailsService implements IOrderDetailsService {
     private final OrderDetailsRepository orderDetailsRepository;
+    private final MedicineRepository medicineRepository;
+    private final OrderRepository orderRepository;
 
-    public OrderDetailsService(OrderDetailsRepository orderDetailsRepository) {
+    public OrderDetailsService(OrderDetailsRepository orderDetailsRepository,
+                               MedicineRepository medicineRepository,
+                               OrderRepository orderRepository) {
         this.orderDetailsRepository = orderDetailsRepository;
+        this.medicineRepository = medicineRepository;
+        this.orderRepository = orderRepository;
     }
 
     @Override
@@ -22,6 +33,20 @@ public class OrderDetailsService implements IOrderDetailsService {
     public OrderDetails saveOrderDetails(OrderDetails orderDetails) {
         System.out.println("[OrderDetailsService] saveOrderDetails called for orderId: " + orderDetails.getOrderId());
         orderDetailsRepository.save(orderDetails);
+
+        Medicine medicine = medicineRepository.findById(orderDetails.getMedicineId())
+                .orElseThrow(() -> new RuntimeException("Medicine not found with id: " + orderDetails.getMedicineId()));
+        medicine.setAvailableQuantity(medicine.getAvailableQuantity() - orderDetails.getQuantity());
+        medicineRepository.update(medicine);
+        System.out.println("[OrderDetailsService] Deducted " + orderDetails.getQuantity() + " from medicine " + orderDetails.getMedicineId()
+                + ", new quantity: " + medicine.getAvailableQuantity());
+
+        Order order = orderRepository.findById(orderDetails.getOrderId())
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + orderDetails.getOrderId()));
+        order.setStatus(OrderStatus.COMPLETED);
+        orderRepository.update(order);
+        System.out.println("[OrderDetailsService] Order " + order.getId() + " status set to COMPLETED");
+
         return orderDetails;
     }
 

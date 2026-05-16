@@ -32,19 +32,10 @@ public class OrderService implements IOrderService {
 
     @Override
     @Transactional
-    public Order createOrder(Order order, List<OrderDetails> orderDetails) {
-        System.out.println("[OrderService] createOrder called for customer: " + order.getCustomerPhone());
-        orderRepository.save(order);
-        for (OrderDetails detail : orderDetails) {
-            detail.setOrderId(order.getId());
-            orderDetailsRepository.save(detail);
-        }
-        return order;
-    }
-
-    @Override
-    @Transactional
     public Order saveOrder(Order order) {
+        if(order.getRefundAmount() == null || order.getRefundAmount() < 0) {
+            order.setRefundAmount(0f);
+        }
         System.out.println("[OrderService] saveOrder called for customer: " + order.getCustomerPhone());
         orderRepository.save(order);
         return order;
@@ -141,6 +132,12 @@ public class OrderService implements IOrderService {
                 refundPercentage = 0.25f;
             } else if (hours < 72) {
                 refundPercentage = 0.10f;
+            } else {
+                System.out.println("[OrderService] returnMedicine - order " + id + " is over 72 hours, cancelling");
+                order.setStatus(OrderStatus.CANCELLED);
+                order.setReturnDateTime(now);
+                orderRepository.update(order);
+                return order;
             }
         }
 

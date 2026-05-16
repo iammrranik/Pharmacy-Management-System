@@ -77,9 +77,10 @@ public class UserApi {
         return ResponseEntity.ok(Map.of("count", userService.countUsers()));
     }
 
-    @PutMapping
-    public ResponseEntity<Map<String, Object>> update(@Valid @RequestBody User user) {
-        System.out.println("[UserApi] PUT /api/users - updating user id: " + user.getId());
+    @PutMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> update(@PathVariable int id, @Valid @RequestBody User user) {
+        System.out.println("[UserApi] PUT /api/users/" + id + " - updating user");
+        user.setId(id);
         User updated = userService.updateUser(user);
         return ResponseEntity.ok(Map.of(
             "message", "User updated successfully",

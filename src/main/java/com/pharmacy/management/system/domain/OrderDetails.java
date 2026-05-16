@@ -7,20 +7,20 @@ public class OrderDetails {
     private Integer id;
 
     @Min(value = 1, message = "Order ID is required")
-    private int orderId;
+    private Integer orderId;
 
     @Min(value = 1, message = "Medicine ID is required")
-    private int medicineId;
+    private Integer medicineId;
 
     @Min(value = 1, message = "Quantity must be at least 1")
-    private int quantity;
+    private Integer quantity;
 
     @Positive(message = "Unit price must be positive")
-    private float unitPrice;
+    private Float unitPrice;
 
     public OrderDetails() {}
 
-    public OrderDetails(Integer id, int orderId, int medicineId, int quantity, float unitPrice) {
+    public OrderDetails(Integer id, Integer orderId, Integer medicineId, Integer quantity, Float unitPrice) {
         this.setId(id);
         this.setOrderId(orderId);
         this.setMedicineId(medicineId);
@@ -36,35 +36,35 @@ public class OrderDetails {
         this.id = id;
     }
 
-    public int getOrderId() {
+    public Integer getOrderId() {
         return orderId;
     }
 
-    public void setOrderId(int orderId) {
+    public void setOrderId(Integer orderId) {
         this.orderId = orderId;
     }
 
-    public int getMedicineId() {
+    public Integer getMedicineId() {
         return medicineId;
     }
 
-    public void setMedicineId(int medicineId) {
+    public void setMedicineId(Integer medicineId) {
         this.medicineId = medicineId;
     }
 
-    public int getQuantity() {
+    public Integer getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(int quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 
-    public float getUnitPrice() {
+    public Float getUnitPrice() {
         return unitPrice;
     }
 
-    public void setUnitPrice(float unitPrice) {
+    public void setUnitPrice(Float unitPrice) {
         this.unitPrice = unitPrice;
     }
 

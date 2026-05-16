@@ -1,5 +1,7 @@
 package com.pharmacy.management.system.domain;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 import com.pharmacy.management.system.domain.enums.OrderStatus;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -12,7 +14,7 @@ public class Order {
     private Integer id;
 
     @Min(value = 1, message = "Customer ID is required")
-    private int customerId;
+    private Integer customerId;
 
     @NotBlank(message = "Customer phone is required")
     private String customerPhone;
@@ -21,21 +23,21 @@ public class Order {
     private LocalDateTime returnDateTime;
 
     @PositiveOrZero(message = "Total amount must be zero or positive")
-    private float totalAmount;
+    private Float totalAmount;
 
-    private float refundAmount = 0;
+    private Float refundAmount = 0f;
 
     @NotNull(message = "Status is required")
     private OrderStatus status;
 
     @Min(value = 1, message = "Seller ID is required")
-    private int sellerId;
+    private Integer sellerId;
 
     public Order() {}
 
-    public Order(Integer id, int customerId, String customerPhone, LocalDateTime orderDateTime,
-                 LocalDateTime returnDateTime, float totalAmount, float refundAmount,
-                 OrderStatus status, int sellerId) {
+    public Order(Integer id, Integer customerId, String customerPhone, LocalDateTime orderDateTime,
+                 LocalDateTime returnDateTime, Float totalAmount, Float refundAmount,
+                 OrderStatus status, Integer sellerId) {
         this.setId(id);
         this.setCustomerId(customerId);
         this.setCustomerPhone(customerPhone);
@@ -55,11 +57,11 @@ public class Order {
         this.id = id;
     }
 
-    public int getCustomerId() {
+    public Integer getCustomerId() {
         return customerId;
     }
 
-    public void setCustomerId(int customerId) {
+    public void setCustomerId(Integer customerId) {
         this.customerId = customerId;
     }
 
@@ -87,19 +89,19 @@ public class Order {
         this.returnDateTime = returnDateTime;
     }
 
-    public float getTotalAmount() {
+    public Float getTotalAmount() {
         return totalAmount;
     }
 
-    public void setTotalAmount(float totalAmount) {
+    public void setTotalAmount(Float totalAmount) {
         this.totalAmount = totalAmount;
     }
 
-    public float getRefundAmount() {
+    public Float getRefundAmount() {
         return refundAmount;
     }
 
-    public void setRefundAmount(float refundAmount) {
+    public void setRefundAmount(Float refundAmount) {
         this.refundAmount = refundAmount;
     }
 
@@ -111,11 +113,11 @@ public class Order {
         this.status = status;
     }
 
-    public int getSellerId() {
+    public Integer getSellerId() {
         return sellerId;
     }
 
-    public void setSellerId(int sellerId) {
+    public void setSellerId(Integer sellerId) {
         this.sellerId = sellerId;
     }
 

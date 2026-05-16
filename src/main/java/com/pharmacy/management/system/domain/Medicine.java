@@ -18,10 +18,10 @@ public class Medicine {
     private String category;
 
     @Positive(message = "Price must be positive")
-    private float price;
+    private Float price;
 
     @Min(value = 0, message = "Available quantity must be zero or positive")
-    private int availableQuantity;
+    private Integer availableQuantity;
 
     @NotBlank(message = "Batch number is required")
     private String batchNo;
@@ -36,8 +36,8 @@ public class Medicine {
 
     public Medicine() {}
 
-    public Medicine(Integer id, String name, String category, float price,
-                    int availableQuantity, String batchNo,
+    public Medicine(Integer id, String name, String category, Float price,
+                    Integer availableQuantity, String batchNo,
                     LocalDate manufactureDate, LocalDate expiryDate, LocalDateTime createdDateTime) {
         this.setId(id);
         this.setName(name);
@@ -74,19 +74,19 @@ public class Medicine {
         this.category = category;
     }
 
-    public float getPrice() {
+    public Float getPrice() {
         return price;
     }
 
-    public void setPrice(float price) {
+    public void setPrice(Float price) {
         this.price = price;
     }
 
-    public int getAvailableQuantity() {
+    public Integer getAvailableQuantity() {
         return availableQuantity;
     }
 
-    public void setAvailableQuantity(int availableQuantity) {
+    public void setAvailableQuantity(Integer availableQuantity) {
         this.availableQuantity = availableQuantity;
     }
 

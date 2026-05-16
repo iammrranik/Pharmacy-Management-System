@@ -55,7 +55,7 @@ public class MedicineService implements IMedicineService {
     }
 
     @Override
-    public List<Medicine> findMedicinesByBatchId(int batchId) {
+    public List<Medicine> findMedicinesByBatchId(String batchId) {
         System.out.println("[MedicineService] findMedicinesByBatchId called for batchId: " + batchId);
         return medicineRepository.findByBatchId(batchId);
     }

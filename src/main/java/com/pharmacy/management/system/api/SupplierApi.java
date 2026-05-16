@@ -78,9 +78,10 @@ public class SupplierApi {
         return ResponseEntity.ok(Map.of("count", supplierService.countSuppliers()));
     }
 
-    @PutMapping
-    public ResponseEntity<Map<String, Object>> update(@Valid @RequestBody Supplier supplier) {
-        System.out.println("[SupplierApi] PUT /api/suppliers - updating id: " + supplier.getId());
+    @PutMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> update(@PathVariable int id, @Valid @RequestBody Supplier supplier) {
+        System.out.println("[SupplierApi] PUT /api/suppliers/" + id + " - updating supplier");
+        supplier.setId(id);
         Supplier updated = supplierService.updateSupplier(supplier);
         return ResponseEntity.ok(Map.of(
             "message", "Supplier updated successfully",

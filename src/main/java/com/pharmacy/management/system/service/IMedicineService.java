@@ -12,7 +12,7 @@ public interface IMedicineService {
     List<Medicine> findMedicinesByName(String name);
     List<Medicine> findMedicinesByCategory(String category);
     List<Medicine> findMedicinesBySupplierId(int supplierId);
-    List<Medicine> findMedicinesByBatchId(int batchId);
+    List<Medicine> findMedicinesByBatchId(String batchId);
     List<Medicine> findAllMedicines();
     List<Medicine> findAllMedicinesByPage(int pageNo, int pageSize);
     int countMedicines();

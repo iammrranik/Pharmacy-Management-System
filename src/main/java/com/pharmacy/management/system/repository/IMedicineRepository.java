@@ -11,7 +11,7 @@ public interface IMedicineRepository {
     List<Medicine> findByName(String name);
     List<Medicine> findByCategory(String category);
     List<Medicine> findBySupplierId(int supplierId);
-    List<Medicine> findByBatchId(int batchId);
+    List<Medicine> findByBatchId(String batchId);
     List<Medicine> findAll();
     List<Medicine> findAllByPage(int pageNo, int pageSize);
     int count();

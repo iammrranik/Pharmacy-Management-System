@@ -63,9 +63,10 @@ public class OrderDetailsApi {
         return ResponseEntity.ok(Map.of("count", orderDetailsService.countOrderDetails()));
     }
 
-    @PutMapping
-    public ResponseEntity<Map<String, Object>> update(@Valid @RequestBody OrderDetails orderDetails) {
-        System.out.println("[OrderDetailsApi] PUT /api/order-details - updating id: " + orderDetails.getId());
+    @PutMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> update(@PathVariable int id, @Valid @RequestBody OrderDetails orderDetails) {
+        System.out.println("[OrderDetailsApi] PUT /api/order-details/" + id + " - updating order detail");
+        orderDetails.setId(id);
         OrderDetails updated = orderDetailsService.updateOrderDetails(orderDetails);
         return ResponseEntity.ok(Map.of(
             "message", "Order detail updated successfully",

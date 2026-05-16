@@ -8,7 +8,7 @@ Fields: id, name, email, username, password, phone, role (ADMIN|CUSTOMER), creat
 
 Action | Method | Endpoint | Sample JSON Body / Parameters
 Add User | POST | /api/users | { "name": "Arif Ahmed", "email": "arif@mail.com", "username": "arif", "password": "pass123", "phone": "01711223344", "role": "CUSTOMER" }
-Update User | PUT | /api/users | { "id": 1, "name": "Arif Rahman", "email": "arif.new@mail.com", "username": "arif", "password": "pass123", "phone": "01711223344", "role": "CUSTOMER" }
+Update User | PUT | /api/users/{id} | { "name": "Arif Rahman", "email": "arif.new@mail.com", "username": "arif", "password": "pass123", "phone": "01711223344", "role": "CUSTOMER" }
 Get User | GET | /api/users/{id} | No body. Example: /api/users/1
 Get User by Phone | GET | /api/users/phone/{phone} | No body. Example: /api/users/phone/01711223344
 Get User by Username | GET | /api/users/username/{username} | No body. Example: /api/users/username/arif
@@ -26,13 +26,13 @@ Fields: id, name, category, price, availableQuantity, batchNo, manufactureDate, 
 
 Action | Method | Endpoint | Sample JSON Body / Parameters
 Add Medicine | POST | /api/medicines | { "name": "Napa Extra", "category": "Painkiller", "price": 30.0, "availableQuantity": 100, "batchNo": "B-123", "manufactureDate": "2025-01-01", "expiryDate": "2027-01-01" }
-Update Medicine | PUT | /api/medicines | { "id": 1, "name": "Napa Extra", "category": "Painkiller", "price": 35.0, "availableQuantity": 90, "batchNo": "B-123", "manufactureDate": "2025-01-01", "expiryDate": "2027-01-01" }
+Update Medicine | PUT | /api/medicines/{id} | { "name": "Napa Extra", "category": "Painkiller", "price": 35.0, "availableQuantity": 90, "batchNo": "B-123", "manufactureDate": "2025-01-01", "expiryDate": "2027-01-01" }
 Update Quantity | PUT | /api/medicines/quantity | Query: ?medicineId=1&quantity=50
 Get Medicine | GET | /api/medicines/{id} | No body. Example: /api/medicines/1
 Find by Name | GET | /api/medicines/name/{name} | No body. Example: /api/medicines/name/Napa
 Find by Category | GET | /api/medicines/category/{category} | No body. Example: /api/medicines/category/Painkiller
 Find by Supplier | GET | /api/medicines/supplier/{supplierId} | No body. Example: /api/medicines/supplier/1
-Find by Batch | GET | /api/medicines/batch/{batchId} | No body. Example: /api/medicines/batch/1
+Find by Batch | GET | /api/medicines/batch/{batchId} | No body. Example: /api/medicines/batch/B-123
 List Medicines | GET | /api/medicines/page | Query: ?pageNo=1&pageSize=10
 List All | GET | /api/medicines | No body. Returns list of all medicines
 Count | GET | /api/medicines/count | No body. Returns integer
@@ -48,7 +48,7 @@ Fields: id, name, contactPersonName, email, phone, address, createdDate
 
 Action | Method | Endpoint | Sample JSON Body / Parameters
 Add Supplier | POST | /api/suppliers | { "name": "Square Pharma", "contactPersonName": "Mr. Kamal", "email": "square@mail.com", "phone": "01710000000", "address": "Dhaka" }
-Update Supplier | PUT | /api/suppliers | { "id": 1, "name": "Square Pharma", "contactPersonName": "Mr. Kamal", "email": "square@mail.com", "phone": "01710000000", "address": "Dhaka" }
+Update Supplier | PUT | /api/suppliers/{id} | { "name": "Square Pharma", "contactPersonName": "Mr. Kamal", "email": "square@mail.com", "phone": "01710000000", "address": "Dhaka" }
 Get Supplier | GET | /api/suppliers/{id} | No body. Example: /api/suppliers/1
 Find by Phone | GET | /api/suppliers/phone/{phone} | No body. Example: /api/suppliers/phone/01710000000
 Find by Name | GET | /api/suppliers/name/{name} | No body. Example: /api/suppliers/name/Square
@@ -66,8 +66,7 @@ Base: /api/orders
 Fields: id, customerId, customerPhone, orderDateTime, returnDateTime, totalAmount, refundAmount, status (PENDING|COMPLETED|CANCELLED|REFUNDED), sellerId
 
 Action | Method | Endpoint | Sample JSON Body / Parameters
-Create Order | POST | /api/orders | { "customerId": 1, "customerPhone": "01711223344", "totalAmount": 300.0, "status": "COMPLETED", "sellerId": 2 }
-Save Order | POST | /api/orders/save | { "customerId": 1, "customerPhone": "01711223344", "totalAmount": 300.0, "status": "PENDING", "sellerId": 2 }
+Create Order | POST | /api/orders/save | { "customerId": 1, "customerPhone": "01711223344", "totalAmount": 300.0, "status": "COMPLETED", "sellerId": 2 }
 Return Medicine | POST | /api/orders/return/{id} | No body. Example: /api/orders/return/1
 Get Order | GET | /api/orders/{id} | No body. Example: /api/orders/1
 Find by Phone | GET | /api/orders/phone/{phone} | No body. Example: /api/orders/phone/01711223344
@@ -75,7 +74,7 @@ Find by Status | GET | /api/orders/status/{status} | No body. Example: /api/orde
 List Orders | GET | /api/orders/page | Query: ?pageNo=1&pageSize=10
 List All | GET | /api/orders | No body. Returns list of all orders
 Count | GET | /api/orders/count | No body. Returns integer
-Update Order | PUT | /api/orders | { "id": 1, "customerId": 1, "customerPhone": "01711223344", "totalAmount": 350.0, "status": "COMPLETED", "sellerId": 2 }
+Update Order | PUT | /api/orders/{id} | { "customerId": 1, "customerPhone": "01711223344", "totalAmount": 350.0, "status": "COMPLETED", "sellerId": 2 }
 Update Status | PUT | /api/orders/status/{id} | Query: ?status=COMPLETED. Example: /api/orders/status/1?status=REFUNDED
 Delete Order | DELETE | /api/orders/{id} | No body. Example: /api/orders/1
 
@@ -86,7 +85,7 @@ Fields: id, orderId, medicineId, quantity, unitPrice
 
 Action | Method | Endpoint | Sample JSON Body / Parameters
 Add Detail | POST | /api/order-details | { "orderId": 1, "medicineId": 1, "quantity": 2, "unitPrice": 30.0 }
-Update Detail | PUT | /api/order-details | { "id": 1, "orderId": 1, "medicineId": 1, "quantity": 3, "unitPrice": 30.0 }
+Update Detail | PUT | /api/order-details/{id} | { "orderId": 1, "medicineId": 1, "quantity": 3, "unitPrice": 30.0 }
 Get Detail | GET | /api/order-details/{id} | No body. Example: /api/order-details/1
 Find by Order | GET | /api/order-details/order/{orderId} | No body. Example: /api/order-details/order/1
 List Details | GET | /api/order-details/page | Query: ?pageNo=1&pageSize=10

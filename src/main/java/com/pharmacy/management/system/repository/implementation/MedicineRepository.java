@@ -94,7 +94,7 @@ public class MedicineRepository implements IMedicineRepository {
     }
 
     @Override
-    public List<Medicine> findByBatchId(int batchId) {
+    public List<Medicine> findByBatchId(String batchId) {
         String sql = """
                 SELECT *
                 FROM medicines

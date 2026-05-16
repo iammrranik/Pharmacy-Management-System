@@ -1,7 +1,6 @@
 package com.pharmacy.management.system.api;
 
 import com.pharmacy.management.system.domain.Order;
-import com.pharmacy.management.system.domain.OrderDetails;
 import com.pharmacy.management.system.domain.enums.OrderStatus;
 import com.pharmacy.management.system.service.implementation.OrderService;
 import jakarta.validation.Valid;
@@ -19,16 +18,6 @@ public class OrderApi {
 
     public OrderApi(OrderService orderService) {
         this.orderService = orderService;
-    }
-
-    @PostMapping
-    public ResponseEntity<Map<String, Object>> createOrder(@Valid @RequestBody Order order, @RequestBody List<OrderDetails> orderDetails) {
-        System.out.println("[OrderApi] POST /api/orders - creating order for: " + order.getCustomerPhone());
-        Order created = orderService.createOrder(order, orderDetails);
-        return ResponseEntity.status(201).body(Map.of(
-            "message", "Order created successfully",
-            "data", created
-        ));
     }
 
     @PostMapping("/save")
@@ -91,9 +80,10 @@ public class OrderApi {
         return ResponseEntity.ok(Map.of("count", orderService.countOrders()));
     }
 
-    @PutMapping
-    public ResponseEntity<Map<String, Object>> update(@Valid @RequestBody Order order) {
-        System.out.println("[OrderApi] PUT /api/orders - updating id: " + order.getId());
+    @PutMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> update(@PathVariable int id, @Valid @RequestBody Order order) {
+        System.out.println("[OrderApi] PUT /api/orders/" + id + " - updating order");
+        order.setId(id);
         Order updated = orderService.updateOrder(order);
         return ResponseEntity.ok(Map.of(
             "message", "Order updated successfully",

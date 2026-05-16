@@ -70,7 +70,7 @@ public class MedicineApi {
     }
 
     @GetMapping("/batch/{batchId}")
-    public ResponseEntity<List<Medicine>> findByBatchId(@PathVariable int batchId) {
+    public ResponseEntity<List<Medicine>> findByBatchId(@PathVariable String batchId) {
         System.out.println("[MedicineApi] GET /api/medicines/batch/" + batchId);
         return ResponseEntity.ok(medicineService.findMedicinesByBatchId(batchId));
     }
@@ -99,9 +99,10 @@ public class MedicineApi {
         return ResponseEntity.ok(Map.of("count", medicineService.countMedicines()));
     }
 
-    @PutMapping
-    public ResponseEntity<Map<String, Object>> update(@Valid @RequestBody Medicine medicine) {
-        System.out.println("[MedicineApi] PUT /api/medicines - updating id: " + medicine.getId());
+    @PutMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> update(@PathVariable int id, @Valid @RequestBody Medicine medicine) {
+        System.out.println("[MedicineApi] PUT /api/medicines/" + id + " - updating medicine");
+        medicine.setId(id);
         Medicine updated = medicineService.updateMedicine(medicine);
         return ResponseEntity.ok(Map.of(
             "message", "Medicine updated successfully",
