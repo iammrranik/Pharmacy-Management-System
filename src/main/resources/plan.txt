@@ -207,24 +207,43 @@ will fail login. Either:
                     .requestMatchers(HttpMethod.GET, "/api/medicines/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/suppliers/**").permitAll()
 
+                    // ========== USERS ==========
+                    // ADMIN only: listing, searching, creating, delete-by-criteria
+                    .requestMatchers(HttpMethod.GET, "/api/users").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.GET, "/api/users/page").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.GET, "/api/users/phone/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.GET, "/api/users/username/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.GET, "/api/users/count").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/api/users/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.DELETE, "/api/users/phone/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.DELETE, "/api/users/username/**").hasRole("ADMIN")
+
+                    // ADMIN / CUSTOMER: individual RUD (self-check in controller)
+                    .requestMatchers(HttpMethod.GET, "/api/users/*").authenticated()
+                    .requestMatchers(HttpMethod.PUT, "/api/users/*").authenticated()
+                    .requestMatchers(HttpMethod.DELETE, "/api/users/*").authenticated()
+
                     // ========== ADMIN / CUSTOMER (both roles) ==========
-                    // Users - GET only
-                    .requestMatchers(HttpMethod.GET, "/api/users/**").authenticated()
-                    // Orders - GET and POST
                     .requestMatchers(HttpMethod.GET, "/api/orders/**").authenticated()
                     .requestMatchers(HttpMethod.POST, "/api/orders/**").authenticated()
-                    // Order Details - GET and POST
                     .requestMatchers(HttpMethod.GET, "/api/order-details/**").authenticated()
                     .requestMatchers(HttpMethod.POST, "/api/order-details/**").authenticated()
 
                     // ========== ADMIN only ==========
-                    // Create/update/delete medicines, suppliers, users
+                    // Medicines
                     .requestMatchers(HttpMethod.POST, "/api/medicines/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.PUT, "/api/medicines/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.DELETE, "/api/medicines/**").hasRole("ADMIN")
+                    // Suppliers
                     .requestMatchers(HttpMethod.POST, "/api/suppliers/**").hasRole("ADMIN")
-                    .requestMatchers(HttpMethod.POST, "/api/users/**").hasRole("ADMIN")
-                    // All PUT and DELETE across the entire API
-                    .requestMatchers(HttpMethod.PUT, "/api/**").hasRole("ADMIN")
-                    .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.PUT, "/api/suppliers/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.DELETE, "/api/suppliers/**").hasRole("ADMIN")
+                    // Orders - write (POST is allowed for both roles)
+                    .requestMatchers(HttpMethod.PUT, "/api/orders/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.DELETE, "/api/orders/**").hasRole("ADMIN")
+                    // Order Details - write (POST is allowed for both roles)
+                    .requestMatchers(HttpMethod.PUT, "/api/order-details/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.DELETE, "/api/order-details/**").hasRole("ADMIN")
 
                     .anyRequest().authenticated()
                 )
@@ -245,18 +264,18 @@ will fail login. Either:
 
 
 ======================================================================
-7. AuthController (new class: com.pharmacy.management.system.api)
+7. AuthApi (new class: com.pharmacy.management.system.api)
 ======================================================================
 
     @RestController
     @RequestMapping("/api/auth")
-    public class AuthController {
+    public class AuthApi {
 
         private final UserService userService;
         private final PasswordEncoder passwordEncoder;
         private final JwtUtil jwtUtil;
 
-        public AuthController(UserService userService,
+        public AuthApi(UserService userService,
                               PasswordEncoder passwordEncoder,
                               JwtUtil jwtUtil) {
             this.userService = userService;
@@ -351,7 +370,7 @@ Example test user after migration:
    src/main/java/.../config/JwtUtil.java                 (JWT create/validate)
    src/main/java/.../config/JwtAuthFilter.java           (request filter)
    src/main/java/.../config/SecurityConfig.java          (security chain)
-   src/main/java/.../api/AuthController.java             (login/register)
+   src/main/java/.../api/AuthApi.java                    (login/register)
 
  MODIFIED FILES:
    pom.xml                                                (add 4 deps)
@@ -430,15 +449,15 @@ DELETE /api/suppliers/phone/{phone} | ADMIN only
 DELETE /api/suppliers/name/{name}| ADMIN only
 
 --- USERS (/api/users) ---
-GET  /api/users                  | ADMIN / CUSTOMER
-GET  /api/users/{id}             | ADMIN / CUSTOMER
-GET  /api/users/page             | ADMIN / CUSTOMER
-GET  /api/users/phone/{phone}    | ADMIN / CUSTOMER
-GET  /api/users/username/{username} | ADMIN / CUSTOMER
-GET  /api/users/count            | ADMIN / CUSTOMER
+GET  /api/users                  | ADMIN only
+GET  /api/users/{id}             | ADMIN only, or CUSTOMER if id = self
+GET  /api/users/page             | ADMIN only
+GET  /api/users/phone/{phone}    | ADMIN only
+GET  /api/users/username/{username} | ADMIN only
+GET  /api/users/count            | ADMIN only
 POST /api/users                  | ADMIN only
-PUT  /api/users/{id}             | ADMIN only
-DELETE /api/users/{id}           | ADMIN only
+PUT  /api/users/{id}             | ADMIN only, or CUSTOMER if id = self
+DELETE /api/users/{id}           | ADMIN only, or CUSTOMER if id = self
 DELETE /api/users/phone/{phone}  | ADMIN only
 DELETE /api/users/username/{username} | ADMIN only
 
@@ -485,3 +504,13 @@ DELETE /api/order-details/order/{orderId} | ADMIN only
 
 4. If a CUSTOMER tries to access an Admin-only endpoint,
    Spring returns 403 Forbidden automatically.
+
+5. **Custom self-check for User endpoints:**
+   CUSTOMER can RUD (Read/Update/Delete) only themselves.
+   - UserApi.getCurrentUser() extracts the authenticated User from SecurityContextHolder
+   - For GET/PUT/DELETE /api/users/{id}, if the requester is CUSTOMER and the {id}
+     does not match their own ID, return 403 Forbidden
+   - CUSTOMER cannot escalate their role to ADMIN (returned 403 if attempted)
+   - ADMIN can CRUD any user including other ADMINs
+   - Listing/searching endpoints (GET /api/users, /api/users/page, etc.)
+     remain ADMIN-only to prevent CUSTOMERs from discovering other users

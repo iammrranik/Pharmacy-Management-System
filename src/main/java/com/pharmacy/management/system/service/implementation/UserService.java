@@ -3,6 +3,7 @@ package com.pharmacy.management.system.service.implementation;
 import com.pharmacy.management.system.domain.User;
 import com.pharmacy.management.system.repository.implementation.UserRepository;
 import com.pharmacy.management.system.service.IUserService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,9 +14,11 @@ import java.util.Optional;
 @Service
 public class UserService implements IUserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -24,6 +27,7 @@ public class UserService implements IUserService {
         if (user.getCreatedDate() == null) {
             user.setCreatedDate(LocalDateTime.now());
         }
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         System.out.println("[UserService] saveUser called for username: " + user.getUsername());
         userRepository.save(user);
         return user;
@@ -69,6 +73,9 @@ public class UserService implements IUserService {
     @Transactional
     public User updateUser(User user) {
         System.out.println("[UserService] updateUser called for id: " + user.getId());
+        if (user.getPassword() != null && !user.getPassword().startsWith("$2a$") && !user.getPassword().startsWith("$2b$")) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
         userRepository.update(user);
         return user;
     }

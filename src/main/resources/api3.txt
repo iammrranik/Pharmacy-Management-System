@@ -1,0 +1,561 @@
+api3.txt - RBAC Scenario Testing Guide
+========================================
+
+Three full walkthroughs covering every role:
+
+  Scenario 1: PUBLIC (anonymous, no token)
+  Scenario 2: CUSTOMER (authenticated, self-RUD only)
+  Scenario 3: ADMIN (authenticated, full access)
+
+All examples use these two test users:
+
+  CUSTOMER: { "name": "John Doe", "email": "john@test.com",
+              "username": "john", "password": "pass123",
+              "phone": "01711111111", "role": "CUSTOMER" }
+
+  ADMIN:    { "name": "Jane Admin", "email": "jane@test.com",
+              "username": "jane", "password": "pass123",
+              "phone": "01722222222", "role": "ADMIN" }
+
+
+========================================================================
+SCENARIO 1 — PUBLIC (anonymous, no token)
+========================================================================
+Only: /api/auth/**, GET /api/medicines/**, GET /api/suppliers/**
+
+---- Step 1: Register as CUSTOMER (public) ----
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+    "name": "John Doe",
+    "email": "john@test.com",
+    "username": "john",
+    "password": "pass123",
+    "phone": "01711111111",
+    "role": "CUSTOMER"
+}
+
+--> 201 Created
+{
+    "message": "User registered successfully",
+    "token": "eyJhbGciOiJIUzI1NiJ9...",
+    "data": { "id": 1, "username": "john", "role": "CUSTOMER", ... }
+}
+
+
+---- Step 2: Try to register as ADMIN (denied) ----
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+    "name": "Jane Admin",
+    "email": "jane@test.com",
+    "username": "jane",
+    "password": "pass123",
+    "phone": "01722222222",
+    "role": "ADMIN"
+}
+
+--> 403 Forbidden
+{
+    "error": "Public registration not allowed for ADMIN role"
+}
+
+
+---- Step 3: GET medicines (no token) ----
+GET http://localhost:8080/api/medicines
+
+--> 200 OK
+[ { "id": 1, "name": "Napa", ... }, ... ]
+
+
+---- Step 4: GET suppliers (no token) ----
+GET http://localhost:8080/api/suppliers
+
+--> 200 OK
+[ { "id": 1, "name": "Pharma Ltd", ... }, ... ]
+
+
+---- Step 5: Try to list users (no token, protected) ----
+GET http://localhost:8080/api/users
+
+--> 401 Unauthorized
+{ "error": "Unauthorized" }
+
+
+---- Step 6: Try to create a medicine (no token, protected) ----
+POST http://localhost:8080/api/medicines
+Content-Type: application/json
+
+{ "name": "Napa", "price": 5.0 }
+
+--> 401 Unauthorized
+{ "error": "Unauthorized" }
+
+
+========================================================================
+SCENARIO 2 — CUSTOMER (authenticated, self-RUD only)
+========================================================================
+Uses the CUSTOMER token from registration/login.
+Customer can RUD only their own user record.
+Customer cannot list/search users, cannot ADMIN-only endpoints.
+
+---- Step 1: Login as CUSTOMER ----
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{ "username": "john", "password": "pass123" }
+
+--> 200 OK
+{
+    "token": "eyJhbGciOiJIUzI1NiJ9...",
+    "username": "john",
+    "role": "CUSTOMER"
+}
+
+Save the token. All following requests include:
+  Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+
+
+---- Step 2: Read own profile (self, allowed) ----
+GET http://localhost:8080/api/users/1
+
+--> 200 OK
+{ "id": 1, "username": "john", "role": "CUSTOMER", ... }
+
+
+---- Step 3: Try to read another user (403) ----
+GET http://localhost:8080/api/users/2
+
+--> 403 Forbidden
+{ "error": "Access denied" }
+
+
+---- Step 4: Try to list all users (403) ----
+GET http://localhost:8080/api/users
+
+--> 403 Forbidden
+{ "error": "Forbidden" }
+
+
+---- Step 5: Try to search by phone (403) ----
+GET http://localhost:8080/api/users/phone/01722222222
+
+--> 403 Forbidden
+{ "error": "Forbidden" }
+
+
+---- Step 6: Update own name (self, allowed) ----
+PUT http://localhost:8080/api/users/1
+Content-Type: application/json
+
+{ "name": "John Updated", "email": "john@test.com",
+  "username": "john", "password": "pass123",
+  "phone": "01711111111", "role": "CUSTOMER" }
+
+--> 200 OK
+{ "message": "User updated successfully", "data": { ... } }
+
+
+---- Step 7: Try to escalate own role to ADMIN (denied) ----
+PUT http://localhost:8080/api/users/1
+Content-Type: application/json
+
+{ "name": "John", "email": "john@test.com",
+  "username": "john", "password": "pass123",
+  "phone": "01711111111", "role": "ADMIN" }
+
+--> 403 Forbidden
+{ "error": "Cannot escalate role to ADMIN" }
+
+
+---- Step 8: GET medicines (allowed for all) ----
+GET http://localhost:8080/api/medicines
+
+--> 200 OK
+
+
+---- Step 9: Try to create a medicine (ADMIN only) ----
+POST http://localhost:8080/api/medicines
+Content-Type: application/json
+
+{ "name": "Napa", "price": 5.0, "quantity": 100, "category": "Tablet" }
+
+--> 403 Forbidden
+{ "error": "Forbidden" }
+
+
+---- Step 10: Try to update a medicine (ADMIN only) ----
+PUT http://localhost:8080/api/medicines/1
+Content-Type: application/json
+
+{ "name": "Napa Extra", "price": 6.0, "quantity": 50 }
+
+--> 403 Forbidden
+{ "error": "Forbidden" }
+
+
+---- Step 11: Create an order (allowed) ----
+POST http://localhost:8080/api/orders/save
+Content-Type: application/json
+
+{ "customerName": "John Doe", "customerPhone": "01711111111",
+  "totalAmount": 25.0 }
+
+--> 201 Created
+{ "message": "Order saved successfully", "data": { "id": 1, ... } }
+
+
+---- Step 12: View orders (allowed) ----
+GET http://localhost:8080/api/orders
+
+--> 200 OK
+[ { "id": 1, "customerName": "John Doe", ... } ]
+
+
+---- Step 13: Create order details (allowed) ----
+POST http://localhost:8080/api/order-details
+Content-Type: application/json
+
+{ "orderId": 1, "medicineId": 1, "quantity": 5 }
+
+--> 201 Created
+
+
+---- Step 14: Try to update an order (ADMIN only) ----
+PUT http://localhost:8080/api/orders/1
+Content-Type: application/json
+
+{ "totalAmount": 30.0 }
+
+--> 403 Forbidden
+{ "error": "Forbidden" }
+
+
+---- Step 15: Try to delete a supplier (ADMIN only) ----
+DELETE http://localhost:8080/api/suppliers/1
+
+--> 403 Forbidden
+{ "error": "Forbidden" }
+
+
+---- Step 16: Delete own account (self, allowed) ----
+DELETE http://localhost:8080/api/users/1
+
+--> 200 OK
+{ "message": "User deleted successfully" }
+
+
+========================================================================
+SCENARIO 3 — ADMIN (authenticated, full access)
+========================================================================
+Admin can CRUD everything including other admins.
+
+Note: ADMIN cannot be created via the public /api/auth/register
+endpoint (returns 403). To create the first ADMIN, you need to:
+
+  Option A: Insert a bootstrap admin directly into the DB using
+            the BCrypt-hashed INSERT in db.sql (recommended).
+  Option B: Have an existing ADMIN call POST /api/users (but you
+            need at least one admin first).
+
+This guide uses Option A (SQL bootstrap), then creates jane via API.
+
+---- Step 0: Bootstrap first ADMIN via SQL (one-time setup) ----
+Run this SQL in your MySQL client (BCrypt hash of "pass123"):
+
+    INSERT INTO users (name, email, username, password, phone, role)
+    VALUES ('Bootstrap Admin', 'bootstrap@test.com', 'bootstrap',
+            '$2a$10$uwoMb9AM9oK2tRNOvKGHOe2TPhg903CN6qkug40tK9R0PwPJsOS1i',
+            '01700000000', 'ADMIN');
+
+This creates an admin user with username "bootstrap" / password "pass123".
+
+
+---- Step 1: Login as bootstrap ADMIN ----
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{ "username": "bootstrap", "password": "pass123" }
+
+--> 200 OK
+{
+    "token": "eyJhbGciOiJIUzI1NiJ9...",
+    "username": "bootstrap",
+    "role": "ADMIN"
+}
+
+Save this bootstrap token for the next step.
+
+
+---- Step 2: Create the real ADMIN (jane) via API ----
+POST http://localhost:8080/api/users
+Authorization: Bearer <bootstrap_token>
+Content-Type: application/json
+
+{
+    "name": "Jane Admin",
+    "email": "jane@test.com",
+    "username": "jane",
+    "password": "pass123",
+    "phone": "01722222222",
+    "role": "ADMIN"
+}
+
+--> 201 Created
+{
+    "message": "User created successfully",
+    "data": { "id": 2, "username": "jane", "role": "ADMIN", ... }
+}
+
+
+---- Step 3: Login as jane ADMIN (the real test user) ----
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{ "username": "jane", "password": "pass123" }
+
+--> 200 OK
+{
+    "token": "eyJhbGciOiJIUzI1NiJ9...",
+    "username": "jane",
+    "role": "ADMIN"
+}
+
+All following requests include:
+  Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+
+
+---- Step 4: List all users (ADMIN only) ----
+GET http://localhost:8080/api/users
+
+--> 200 OK
+[ { "id": 1, "username": "john", "role": "CUSTOMER" },
+  { "id": 2, "username": "jane", "role": "ADMIN" } ]
+
+
+---- Step 5: View any user by id (ADMIN only / self-check bypass) ----
+GET http://localhost:8080/api/users/1
+
+--> 200 OK
+{ "id": 1, "username": "john", "role": "CUSTOMER", ... }
+
+
+---- Step 6: Create another ADMIN user (ADMIN only) ----
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+    "name": "Bob Admin",
+    "email": "bob@test.com",
+    "username": "bob",
+    "password": "pass123",
+    "phone": "01733333333",
+    "role": "ADMIN"
+}
+
+--> 201 Created
+{
+    "message": "User created successfully",
+    "data": { "id": 3, "username": "bob", "role": "ADMIN", ... }
+}
+
+
+---- Step 7: Update another user (allowed) ----
+PUT http://localhost:8080/api/users/1
+Content-Type: application/json
+
+{ "name": "John Updated", "email": "john@test.com",
+  "username": "john", "password": "pass123",
+  "phone": "01711111111", "role": "CUSTOMER" }
+
+--> 200 OK
+{ "message": "User updated successfully", "data": { ... } }
+
+
+---- Step 8: Search users by phone (ADMIN only) ----
+GET http://localhost:8080/api/users/phone/01722222222
+
+--> 200 OK
+{ "id": 2, "username": "jane", ... }
+
+
+---- Step 9: Search users by username (ADMIN only) ----
+GET http://localhost:8080/api/users/username/john
+
+--> 200 OK
+{ "id": 1, "username": "john", ... }
+
+
+---- Step 10: Create a medicine (ADMIN only) ----
+POST http://localhost:8080/api/medicines
+Content-Type: application/json
+
+{
+    "name": "Napa",
+    "price": 5.0,
+    "quantity": 200,
+    "category": "Tablet",
+    "supplierId": 1,
+    "batchId": "BATCH-001"
+}
+
+--> 201 Created
+{ "message": "Medicine created successfully", "data": { ... } }
+
+
+---- Step 11: Update a medicine (ADMIN only) ----
+PUT http://localhost:8080/api/medicines/1
+Content-Type: application/json
+
+{ "price": 5.5, "quantity": 150 }
+
+--> 200 OK
+{ "message": "Medicine updated successfully", "data": { ... } }
+
+
+---- Step 12: Delete a medicine (ADMIN only) ----
+DELETE http://localhost:8080/api/medicines/1
+
+--> 200 OK
+{ "message": "Medicine deleted successfully" }
+
+
+---- Step 13: Create a supplier (ADMIN only) ----
+POST http://localhost:8080/api/suppliers
+Content-Type: application/json
+
+{
+    "name": "New Supplier",
+    "email": "supplier@test.com",
+    "phone": "01744444444"
+}
+
+--> 201 Created
+
+
+---- Step 14: Update a supplier (ADMIN only) ----
+PUT http://localhost:8080/api/suppliers/1
+Content-Type: application/json
+
+{ "name": "Supplier Updated" }
+
+--> 200 OK
+
+
+---- Step 15: Delete a supplier (ADMIN only) ----
+DELETE http://localhost:8080/api/suppliers/1
+
+--> 200 OK
+
+
+---- Step 16: Update any order (ADMIN only) ----
+PUT http://localhost:8080/api/orders/1
+Content-Type: application/json
+
+{ "totalAmount": 50.0 }
+
+--> 200 OK
+{ "message": "Order updated successfully", "data": { ... } }
+
+
+---- Step 17: Update order status (ADMIN only) ----
+PUT http://localhost:8080/api/orders/status/1
+Content-Type: application/json
+
+{ "status": "COMPLETED" }
+
+--> 200 OK
+
+
+---- Step 18: Delete an order (ADMIN only) ----
+DELETE http://localhost:8080/api/orders/1
+
+--> 200 OK
+
+
+---- Step 19: View all orders (any authenticated) ----
+GET http://localhost:8080/api/orders
+
+--> 200 OK
+
+
+---- Step 20: Update order details (ADMIN only) ----
+PUT http://localhost:8080/api/order-details/1
+Content-Type: application/json
+
+{ "quantity": 10 }
+
+--> 200 OK
+
+
+---- Step 21: Delete order details (ADMIN only) ----
+DELETE http://localhost:8080/api/order-details/1
+
+--> 200 OK
+
+
+---- Step 22: Delete a user by phone (ADMIN only) ----
+DELETE http://localhost:8080/api/users/phone/01711111111
+
+--> 200 OK
+{ "message": "User deleted successfully" }
+
+
+---- Step 23: Delete a user by username (ADMIN only) ----
+DELETE http://localhost:8080/api/users/username/bob
+
+--> 200 OK
+{ "message": "User deleted successfully" }
+
+
+---- Step 24: Delete own admin account (allowed for any role) ----
+DELETE http://localhost:8080/api/users/2
+
+--> 200 OK
+{ "message": "User deleted successfully" }
+
+
+========================================================================
+QUICK REFERENCE — RBAC MATRIX
+========================================================================
+
+ENDPOINT                                | PUBLIC | CUSTOMER | ADMIN
+----------------------------------------|--------|----------|----------
+POST /api/auth/register                 |  YES   |   n/a    |  n/a
+POST /api/auth/login                    |  YES   |   n/a    |  n/a
+GET  /api/medicines/**                  |  YES   |   YES    |  YES
+POST /api/medicines/**                  |   -    |    -     |  YES
+PUT  /api/medicines/**                  |   -    |    -     |  YES
+DELETE /api/medicines/**                |   -    |    -     |  YES
+GET  /api/suppliers/**                  |  YES   |   YES    |  YES
+POST /api/suppliers/**                  |   -    |    -     |  YES
+PUT  /api/suppliers/**                  |   -    |    -     |  YES
+DELETE /api/suppliers/**                |   -    |    -     |  YES
+GET  /api/users (list)                  |   -    |    -     |  YES
+GET  /api/users/{id}                    |   -    | self-only|  YES
+GET  /api/users/page                   |   -    |    -     |  YES
+GET  /api/users/phone/{phone}          |   -    |    -     |  YES
+GET  /api/users/username/{username}    |   -    |    -     |  YES
+GET  /api/users/count                  |   -    |    -     |  YES
+POST /api/users                        |   -    |    -     |  YES
+PUT  /api/users/{id}                   |   -    | self-only|  YES
+DELETE /api/users/{id}                 |   -    | self-only|  YES
+DELETE /api/users/phone/{phone}        |   -    |    -     |  YES
+DELETE /api/users/username/{username}  |   -    |    -     |  YES
+GET  /api/orders/**                    |   -    |   YES    |  YES
+POST /api/orders/save                  |   -    |   YES    |  YES
+POST /api/orders/return/{id}           |   -    |   YES    |  YES
+PUT  /api/orders/**                    |   -    |    -     |  YES
+DELETE /api/orders/**                  |   -    |    -     |  YES
+GET  /api/order-details/**             |   -    |   YES    |  YES
+POST /api/order-details                |   -    |   YES    |  YES
+PUT  /api/order-details/**             |   -    |    -     |  YES
+DELETE /api/order-details/**           |   -    |    -     |  YES
+
+KEY:
+  YES       = allowed
+  self-only = allowed only if the {id} matches the requester's own user id
+  -         = denied (401 or 403)
+  n/a       = not applicable (no token involved)

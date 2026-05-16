@@ -1,0 +1,229 @@
+POSTMAN GUIDE - Spring Security + JWT Auth
+===========================================
+
+The application now uses JWT token-based authentication.
+Almost all endpoints (except Public ones) require a valid token
+in the Authorization header.
+
+
+1. REGISTER A NEW USER (Public - no token needed)
+=================================================
+
+Public registration only allows the CUSTOMER role.
+ADMIN users must be created by an existing ADMIN via POST /api/users.
+
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+    "name": "John Doe",
+    "email": "john@test.com",
+    "username": "john",
+    "password": "pass123",
+    "phone": "01711111111",
+    "role": "CUSTOMER"
+}
+
+Response (201 Created):
+{
+    "message": "User registered successfully",
+    "token": "eyJhbGciOiJIUzI1NiJ9...",
+    "data": { ... }
+}
+
+Copy the "token" value from the response.
+
+To create an ADMIN user, see step 7 below (bootstrap flow).
+
+
+2. LOGIN (Public - no token needed)
+====================================
+
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+    "username": "john",
+    "password": "pass123"
+}
+
+Response (200 OK):
+{
+    "token": "eyJhbGciOiJIUzI1NiJ9...",
+    "username": "john",
+    "role": "CUSTOMER"
+}
+
+Copy the "token" value.
+
+
+3. HOW TO USE THE TOKEN IN POSTMAN
+===================================
+
+For every protected endpoint, add a header:
+
+    Key:   Authorization
+    Value: Bearer <your_token_here>
+
+Example:
+    Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+
+In Postman:
+  - Go to the "Headers" tab
+  - Add "Authorization" as the key
+  - Add "Bearer <token>" as the value
+  - Or use the "Authorization" tab -> Type = "Bearer Token" -> paste token
+
+If you don't send the token, you'll get:
+    401 Unauthorized
+    {
+        "error": "Unauthorized",
+        "status": 401
+    }
+
+If you send an invalid/expired token, you'll get:
+    403 Forbidden
+
+
+4. RBAC - WHAT YOU CAN ACCESS WITH EACH ROLE
+=============================================
+
+Legend:
+  Public            = No token needed
+  ADMIN / CUSTOMER  = Both roles can access
+  ADMIN only        = Only ADMIN role can access
+
+
+--- REGISTRATION & LOGIN (Public) ---
+POST /api/auth/register        | Public (CUSTOMER only; ADMIN role = 403)
+POST /api/auth/login           | Public
+
+
+--- MEDICINES ---
+GET  /api/medicines           | Public
+GET  /api/medicines/{id}      | Public
+GET  /api/medicines/page      | Public
+GET  /api/medicines/name/{name}         | Public
+GET  /api/medicines/category/{category} | Public
+GET  /api/medicines/supplier/{supplierId} | Public
+GET  /api/medicines/batch/{batchId}     | Public
+GET  /api/medicines/low-stock           | Public
+GET  /api/medicines/expired             | Public
+GET  /api/medicines/expiring-within     | Public
+GET  /api/medicines/count               | Public
+POST /api/medicines           | ADMIN only
+PUT  /api/medicines/{id}      | ADMIN only
+PUT  /api/medicines/quantity  | ADMIN only
+DELETE /api/medicines/{id}    | ADMIN only
+
+
+--- SUPPLIERS ---
+GET  /api/suppliers           | Public
+GET  /api/suppliers/{id}      | Public
+GET  /api/suppliers/page      | Public
+GET  /api/suppliers/phone/{phone} | Public
+GET  /api/suppliers/name/{name}   | Public
+GET  /api/suppliers/count     | Public
+GET  /api/suppliers/export/csv| Public
+POST /api/suppliers           | ADMIN only
+PUT  /api/suppliers/{id}      | ADMIN only
+DELETE /api/suppliers/{id}    | ADMIN only
+DELETE /api/suppliers/phone/{phone} | ADMIN only
+DELETE /api/suppliers/name/{name}   | ADMIN only
+
+
+--- USERS (requires token) ---
+GET  /api/users               | ADMIN only
+GET  /api/users/{id}          | ADMIN only, or CUSTOMER if id = self
+GET  /api/users/page          | ADMIN only
+GET  /api/users/phone/{phone} | ADMIN only
+GET  /api/users/username/{username} | ADMIN only
+GET  /api/users/count         | ADMIN only
+POST /api/users               | ADMIN only
+PUT  /api/users/{id}          | ADMIN only, or CUSTOMER if id = self
+DELETE /api/users/{id}        | ADMIN only, or CUSTOMER if id = self
+DELETE /api/users/phone/{phone} | ADMIN only
+DELETE /api/users/username/{username} | ADMIN only
+
+
+--- ORDERS (requires token) ---
+GET  /api/orders              | ADMIN / CUSTOMER
+GET  /api/orders/{id}         | ADMIN / CUSTOMER
+GET  /api/orders/page         | ADMIN / CUSTOMER
+GET  /api/orders/phone/{phone}| ADMIN / CUSTOMER
+GET  /api/orders/status/{status} | ADMIN / CUSTOMER
+GET  /api/orders/count        | ADMIN / CUSTOMER
+POST /api/orders/save         | ADMIN / CUSTOMER
+POST /api/orders/return/{id}  | ADMIN / CUSTOMER
+PUT  /api/orders/{id}         | ADMIN only
+PUT  /api/orders/status/{id}  | ADMIN only
+DELETE /api/orders/{id}       | ADMIN only
+
+
+--- ORDER DETAILS (requires token) ---
+GET  /api/order-details           | ADMIN / CUSTOMER
+GET  /api/order-details/{id}      | ADMIN / CUSTOMER
+GET  /api/order-details/page      | ADMIN / CUSTOMER
+GET  /api/order-details/order/{orderId} | ADMIN / CUSTOMER
+GET  /api/order-details/count     | ADMIN / CUSTOMER
+POST /api/order-details           | ADMIN / CUSTOMER
+PUT  /api/order-details/{id}      | ADMIN only
+DELETE /api/order-details/{id}    | ADMIN only
+DELETE /api/order-details/order/{orderId} | ADMIN only
+
+
+5. TESTING STEPS IN POSTMAN
+============================
+
+Step 1: Register/Login to get a token
+  - POST /api/auth/register (create user)
+  - OR POST /api/auth/login (get token for existing user)
+  - Copy the "token" from the response
+
+Step 2: Set the token as a variable (recommended)
+  - In Postman, create a collection variable "token"
+  - Set it to the token value
+  - Then for all endpoints, set header:
+        Authorization: Bearer {{token}}
+
+Step 3: Test Public endpoints (no token needed)
+  - GET /api/medicines  -> should work without any header
+
+Step 4: Test ADMIN / CUSTOMER endpoints
+  - GET /api/orders  -> add Authorization header with CUSTOMER token -> works
+  - GET /api/orders  -> without Authorization header -> 401 Unauthorized
+
+Step 5: Test ADMIN only endpoints
+  - POST /api/medicines with ADMIN token -> 201 Created
+  - POST /api/medicines with CUSTOMER token -> 403 Forbidden
+  - POST /api/medicines without token -> 401 Unauthorized
+
+Step 6: Role switching
+  - Register one CUSTOMER via POST /api/auth/register
+  - Create an ADMIN via the bootstrap flow (see step 7 below)
+  - Login with each to get their tokens
+  - ADMIN token can access everything
+  - CUSTOMER token gets 403 on ADMIN-only endpoints
+
+Step 7: Getting an ADMIN token (bootstrap)
+  - Public /api/auth/register blocks ADMIN role (403)
+  - You need one bootstrap ADMIN in the DB first:
+    Run the BCrypt INSERT from db.sql, OR use the SQL in api3.txt
+  - Login as that bootstrap ADMIN, then create more admins
+    via POST /api/users (see api3.txt Scenario 3 for full walkthrough)
+
+
+6. NOTE ON EXISTING USERS (from db.sql)
+========================================
+
+The db.sql sample users have plaintext passwords.
+They will NOT work with login after BCrypt is implemented.
+
+Fix A: Use the commented BCrypt INSERT in db.sql (same 5 users
+       with pre-hashed "pass123") — uncomment and run it.
+
+Fix B: Register CUSTOMER users via POST /api/auth/register.
+       For ADMIN users, bootstrap one via SQL first, then create
+       others via POST /api/users (see api3.txt for the flow).
+
+Fix C: Generate BCrypt hashes manually and UPDATE the DB.

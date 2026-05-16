@@ -1,9 +1,12 @@
 package com.pharmacy.management.system.api;
 
 import com.pharmacy.management.system.domain.User;
+import com.pharmacy.management.system.domain.enums.UserRole;
 import com.pharmacy.management.system.service.implementation.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,6 +47,10 @@ public class UserApi {
     @GetMapping("/{id}")
     public ResponseEntity<?> findById(@PathVariable int id) {
         System.out.println("[UserApi] GET /api/users/" + id);
+        User currentUser = getCurrentUser();
+        if (currentUser.getRole() == UserRole.CUSTOMER && currentUser.getId() != id) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
         var user = userService.findUserById(id);
         if (user.isPresent()) {
             return ResponseEntity.ok(user.get());
@@ -78,8 +85,15 @@ public class UserApi {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> update(@PathVariable int id, @Valid @RequestBody User user) {
+    public ResponseEntity<?> update(@PathVariable int id, @Valid @RequestBody User user) {
         System.out.println("[UserApi] PUT /api/users/" + id + " - updating user");
+        User currentUser = getCurrentUser();
+        if (currentUser.getRole() == UserRole.CUSTOMER && currentUser.getId() != id) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
+        if (currentUser.getRole() == UserRole.CUSTOMER && user.getRole() == UserRole.ADMIN) {
+            return ResponseEntity.status(403).body(Map.of("error", "Cannot escalate role to ADMIN"));
+        }
         user.setId(id);
         User updated = userService.updateUser(user);
         return ResponseEntity.ok(Map.of(
@@ -89,8 +103,12 @@ public class UserApi {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, String>> delete(@PathVariable int id) {
+    public ResponseEntity<?> delete(@PathVariable int id) {
         System.out.println("[UserApi] DELETE /api/users/" + id);
+        User currentUser = getCurrentUser();
+        if (currentUser.getRole() == UserRole.CUSTOMER && currentUser.getId() != id) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied"));
+        }
         userService.deleteUser(id);
         return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
     }
@@ -107,5 +125,10 @@ public class UserApi {
         System.out.println("[UserApi] DELETE /api/users/username/" + username);
         userService.deleteUserByUsername(username);
         return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
+    }
+
+    private User getCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return (User) auth.getPrincipal();
     }
 }

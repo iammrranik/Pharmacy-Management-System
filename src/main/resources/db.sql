@@ -81,15 +81,23 @@ CREATE TABLE IF NOT EXISTS order_details (
 
 -- Insert 5 sample Users
 -- NOTE: After Spring Security + BCrypt implementation, plaintext passwords
--- will NOT work for login. Re-register these users via POST /api/auth/register
--- after the app starts, or generate BCrypt hashes manually (e.g. using an
--- online BCrypt generator for "pass123") and UPDATE them in the DB.
+-- will NOT work for login. Use the commented BCrypt INSERT below instead,
+-- or re-register via POST /api/auth/register after the app starts.
+--INSERT INTO users (name, email, username, password, phone, role) VALUES
+--('Anik Ahmed', 'anik.admin@email.com', 'anik_admin', 'pass123', '01711000001', 'ADMIN'),
+--('Sabbir Hasan', 'sabbir.cust@email.com', 'sabbir_99', 'pass123', '01822000002', 'CUSTOMER'),
+--('Rina Akter', 'rina.admin@email.com', 'rina_boss', 'pass123', '01933000003', 'ADMIN'),
+--('Tanvir Hossain', 'tanvir.cust@email.com', 'tanvir_h', 'pass123', '01544000004', 'CUSTOMER'),
+--('Nusrat Jahan', 'nusrat.cust@email.com', 'nusrat_j', 'pass123', '01655000005', 'CUSTOMER');
+
+-- Same 5 users with BCrypt-hashed "pass123" (ready for Spring Security login)
+-- Password hash: $2a$10$uwoMb9AM9oK2tRNOvKGHOe2TPhg903CN6qkug40tK9R0PwPJsOS1i
 INSERT INTO users (name, email, username, password, phone, role) VALUES
-('Anik Ahmed', 'anik.admin@email.com', 'anik_admin', 'pass123', '01711000001', 'ADMIN'),
-('Sabbir Hasan', 'sabbir.cust@email.com', 'sabbir_99', 'pass123', '01822000002', 'CUSTOMER'),
-('Rina Akter', 'rina.admin@email.com', 'rina_boss', 'pass123', '01933000003', 'ADMIN'),
-('Tanvir Hossain', 'tanvir.cust@email.com', 'tanvir_h', 'pass123', '01544000004', 'CUSTOMER'),
-('Nusrat Jahan', 'nusrat.cust@email.com', 'nusrat_j', 'pass123', '01655000005', 'CUSTOMER');
+('Anik Ahmed', 'anik.admin@email.com', 'anik_admin', '$2a$10$uwoMb9AM9oK2tRNOvKGHOe2TPhg903CN6qkug40tK9R0PwPJsOS1i', '01711000001', 'ADMIN'),
+('Sabbir Hasan', 'sabbir.cust@email.com', 'sabbir_99', '$2a$10$uwoMb9AM9oK2tRNOvKGHOe2TPhg903CN6qkug40tK9R0PwPJsOS1i', '01822000002', 'CUSTOMER'),
+('Rina Akter', 'rina.admin@email.com', 'rina_boss', '$2a$10$uwoMb9AM9oK2tRNOvKGHOe2TPhg903CN6qkug40tK9R0PwPJsOS1i', '01933000003', 'ADMIN'),
+('Tanvir Hossain', 'tanvir.cust@email.com', 'tanvir_h', '$2a$10$uwoMb9AM9oK2tRNOvKGHOe2TPhg903CN6qkug40tK9R0PwPJsOS1i', '01544000004', 'CUSTOMER'),
+('Nusrat Jahan', 'nusrat.cust@email.com', 'nusrat_j', '$2a$10$uwoMb9AM9oK2tRNOvKGHOe2TPhg903CN6qkug40tK9R0PwPJsOS1i', '01655000005', 'CUSTOMER');
 
 -- Insert 5 sample Suppliers
 INSERT INTO suppliers (supplier_name, contact_person_name, email, phone, address) VALUES
