@@ -58,7 +58,9 @@ CREATE TABLE IF NOT EXISTS orders (
     total_amount      FLOAT NOT NULL,
     refund_amount     FLOAT DEFAULT 0,
     status            VARCHAR(20) DEFAULT 'PENDING',
-    seller_id         INT NOT NULL
+    seller_id         INT NOT NULL,
+    FOREIGN KEY (customer_id) REFERENCES users(id),
+    FOREIGN KEY (seller_id) REFERENCES users(id)
 );
 
 -- Create OrderDetails Table
@@ -78,6 +80,10 @@ CREATE TABLE IF NOT EXISTS order_details (
 -- ==========================================
 
 -- Insert 5 sample Users
+-- NOTE: After Spring Security + BCrypt implementation, plaintext passwords
+-- will NOT work for login. Re-register these users via POST /api/auth/register
+-- after the app starts, or generate BCrypt hashes manually (e.g. using an
+-- online BCrypt generator for "pass123") and UPDATE them in the DB.
 INSERT INTO users (name, email, username, password, phone, role) VALUES
 ('Anik Ahmed', 'anik.admin@email.com', 'anik_admin', 'pass123', '01711000001', 'ADMIN'),
 ('Sabbir Hasan', 'sabbir.cust@email.com', 'sabbir_99', 'pass123', '01822000002', 'CUSTOMER'),

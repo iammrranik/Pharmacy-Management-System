@@ -1,0 +1,485 @@
+Spring Security + JWT Auth Implementation Plan
+==============================================
+
+======================================================================
+1. ADD DEPENDENCIES (pom.xml)
+======================================================================
+
+Inside <dependencies> block, add:
+
+    <!-- Spring Security -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+
+    <!-- JWT -->
+    <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-api</artifactId>
+        <version>0.12.6</version>
+    </dependency>
+    <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-impl</artifactId>
+        <version>0.12.6</version>
+        <scope>runtime</scope>
+    </dependency>
+    <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-jackson</artifactId>
+        <version>0.12.6</version>
+        <scope>runtime</scope>
+    </dependency>
+
+Also add to application.properties:
+    jwt.secret=mySecretKeyForJwtTokenGeneration2026PharmacyManagementSystem
+    jwt.expiration=86400000
+
+
+======================================================================
+2. PASSWORD ENCODER CONFIG (new class: SecurityBeansConfig.java)
+======================================================================
+
+Package: com.pharmacy.management.system.config
+
+    @Configuration
+    public class SecurityBeansConfig {
+
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+            return new BCryptPasswordEncoder();
+        }
+    }
+
+
+======================================================================
+3. UPDATE UserService TO HASH PASSWORDS (UserService.java)
+======================================================================
+
+Changes needed:
+- Inject PasswordEncoder via constructor
+- In saveUser(User):
+    String raw = user.getPassword();
+    user.setPassword(passwordEncoder.encode(raw));
+- In updateUser(User):
+    // Check if password is already hashed (not BCrypt format means plaintext)
+    String raw = user.getPassword();
+    if (raw != null && !raw.startsWith("$2a$") && !raw.startsWith("$2b$")) {
+        user.setPassword(passwordEncoder.encode(raw));
+    }
+- Keep System.out.println logs for tracking
+
+NOTE: After implementation, existing DB passwords (plaintext like "pass123")
+will fail login. Either:
+  a) Re-save all users via /api/auth/register, or
+  b) Run a one-time SQL: UPDATE users SET password = '$2a$10$...' for each
+
+
+======================================================================
+4. JwtUtil (new class: com.pharmacy.management.system.config)
+======================================================================
+
+    @Component
+    public class JwtUtil {
+
+        @Value("${jwt.secret}")
+        private String secretKey;
+
+        @Value("${jwt.expiration}")
+        private long expirationMs;
+
+        private final SecretKey key;
+
+        @PostConstruct
+        public void init() {
+            key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+        }
+
+        // Generate JWT token
+        public String generateToken(User user) {
+            long now = System.currentTimeMillis();
+            return Jwts.builder()
+                    .subject(user.getUsername())
+                    .claim("role", user.getRole().name())
+                    .claim("userId", user.getId())
+                    .issuedAt(new Date(now))
+                    .expiration(new Date(now + expirationMs))
+                    .signWith(key)
+                    .compact();
+        }
+
+        // Extract username from token
+        public String getUsernameFromToken(String token) {
+            return Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .getSubject();
+        }
+
+        // Validate token
+        public boolean validateToken(String token) {
+            try {
+                Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
+                return true;
+            } catch (JwtException | IllegalArgumentException e) {
+                return false;
+            }
+        }
+    }
+
+
+======================================================================
+5. JwtAuthFilter (new class: com.pharmacy.management.system.config)
+======================================================================
+
+    @Component
+    public class JwtAuthFilter extends OncePerRequestFilter {
+
+        private final JwtUtil jwtUtil;
+        private final UserService userService;
+
+        public JwtAuthFilter(JwtUtil jwtUtil, UserService userService) {
+            this.jwtUtil = jwtUtil;
+            this.userService = userService;
+        }
+
+        @Override
+        protected void doFilterInternal(HttpServletRequest request,
+                                        HttpServletResponse response,
+                                        FilterChain filterChain)
+                throws ServletException, IOException {
+
+            String authHeader = request.getHeader("Authorization");
+
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+
+                if (jwtUtil.validateToken(token)) {
+                    String username = jwtUtil.getUsernameFromToken(token);
+                    User user = userService.findUserByUsername(username)
+                            .orElse(null);
+
+                    if (user != null) {
+                        SimpleGrantedAuthority authority =
+                                new SimpleGrantedAuthority("ROLE_" + user.getRole().name());
+                        UsernamePasswordAuthenticationToken auth =
+                                new UsernamePasswordAuthenticationToken(
+                                        user, null, List.of(authority));
+                        auth.setDetails(new WebAuthenticationDetailsSource()
+                                .buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(auth);
+                    }
+                }
+            }
+
+            filterChain.doFilter(request, response);
+        }
+    }
+
+
+======================================================================
+6. SecurityConfig (new class: com.pharmacy.management.system.config)
+======================================================================
+
+    @Configuration
+    @EnableWebSecurity
+    @EnableMethodSecurity   // enables @PreAuthorize on methods
+    public class SecurityConfig {
+
+        private final JwtAuthFilter jwtAuthFilter;
+
+        public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
+            this.jwtAuthFilter = jwtAuthFilter;
+        }
+
+        @Bean
+        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+            http
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                    // Public endpoints
+                    .requestMatchers("/api/auth/**").permitAll()
+
+                    // Public read-only for medicines and suppliers
+                    .requestMatchers(HttpMethod.GET, "/api/medicines/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/suppliers/**").permitAll()
+
+                    // Authenticated (any role)
+                    .requestMatchers(HttpMethod.GET, "/api/users/**").authenticated()
+                    .requestMatchers(HttpMethod.GET, "/api/orders/**").authenticated()
+                    .requestMatchers(HttpMethod.GET, "/api/order-details/**").authenticated()
+
+                    // POST requires authentication
+                    .requestMatchers(HttpMethod.POST, "/api/orders/**").authenticated()
+                    .requestMatchers(HttpMethod.POST, "/api/order-details/**").authenticated()
+
+                    // Admin only (modify operations)
+                    .requestMatchers(HttpMethod.POST, "/api/medicines/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/api/suppliers/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/api/users/**").hasRole("ADMIN")
+
+                    .requestMatchers(HttpMethod.PUT, "/api/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
+
+                    .anyRequest().authenticated()
+                )
+                .sessionManagement(session ->
+                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtAuthFilter,
+                        UsernamePasswordAuthenticationFilter.class);
+
+            return http.build();
+        }
+
+        @Bean
+        public AuthenticationManager authenticationManager(
+                AuthenticationConfiguration config) throws Exception {
+            return config.getAuthenticationManager();
+        }
+    }
+
+
+======================================================================
+7. AuthController (new class: com.pharmacy.management.system.api)
+======================================================================
+
+    @RestController
+    @RequestMapping("/api/auth")
+    public class AuthController {
+
+        private final UserService userService;
+        private final PasswordEncoder passwordEncoder;
+        private final JwtUtil jwtUtil;
+
+        public AuthController(UserService userService,
+                              PasswordEncoder passwordEncoder,
+                              JwtUtil jwtUtil) {
+            this.userService = userService;
+            this.passwordEncoder = passwordEncoder;
+            this.jwtUtil = jwtUtil;
+        }
+
+        // POST /api/auth/login
+        @PostMapping("/login")
+        public ResponseEntity<Map<String, Object>> login(
+                @RequestBody Map<String, String> credentials) {
+
+            String username = credentials.get("username");
+            String password = credentials.get("password");
+
+            User user = userService.findUserByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            if (!passwordEncoder.matches(password, user.getPassword())) {
+                return ResponseEntity.status(401).body(Map.of(
+                    "error", "Invalid credentials"));
+            }
+
+            String token = jwtUtil.generateToken(user);
+            return ResponseEntity.ok(Map.of(
+                "token", token,
+                "username", user.getUsername(),
+                "role", user.getRole().name()
+            ));
+        }
+
+        // POST /api/auth/register
+        @PostMapping("/register")
+        public ResponseEntity<Map<String, Object>> register(
+                @Valid @RequestBody User user) {
+
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            User saved = userService.saveUser(user);
+            String token = jwtUtil.generateToken(saved);
+
+            return ResponseEntity.status(201).body(Map.of(
+                "message", "User registered successfully",
+                "token", token,
+                "data", saved
+            ));
+        }
+    }
+
+
+======================================================================
+8. OPTIONAL: PROTECT INDIVIDUAL METHODS WITH @PreAuthorize
+======================================================================
+
+After @EnableMethodSecurity is set in SecurityConfig,
+add annotations directly on controller methods:
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, String>> delete(@PathVariable int id) { ... }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping
+    public ResponseEntity<Map<String, Object>> save(@Valid @RequestBody Medicine medicine) { ... }
+
+Alternative: keep all security in SecurityConfig's filter chain (step 6)
+and skip @PreAuthorize entirely — cleaner and centralized.
+
+
+======================================================================
+9. NOTE ON EXISTING USERS
+======================================================================
+
+Current DB passwords are plaintext (e.g. "pass123").
+After adding PasswordEncoder:
+  - Login will fail for existing users because BCrypt.matches()
+    compares against hashed DB value, but DB has plaintext.
+  - Fix: Re-create users via POST /api/auth/register, or
+    run UPDATE SQL to hash passwords manually.
+
+Example test user after migration:
+  { "name": "Test Admin", "email": "admin@test.com",
+    "username": "admin", "password": "admin123",
+    "phone": "01700000000", "role": "ADMIN" }
+
+
+======================================================================
+10. FILE SUMMARY
+======================================================================
+
+ NEW FILES:
+   src/main/java/.../config/SecurityBeansConfig.java    (PasswordEncoder bean)
+   src/main/java/.../config/JwtUtil.java                 (JWT create/validate)
+   src/main/java/.../config/JwtAuthFilter.java           (request filter)
+   src/main/java/.../config/SecurityConfig.java          (security chain)
+   src/main/java/.../api/AuthController.java             (login/register)
+
+ MODIFIED FILES:
+   pom.xml                                                (add 4 deps)
+   src/main/resources/application.properties             (add jwt.secret, jwt.expiration)
+   src/main/java/.../service/implementation/UserService.java  (hash passwords)
+
+
+======================================================================
+11. HOW TO TEST
+======================================================================
+
+1. Start the application
+2. Register a user:
+   POST /api/auth/register
+   Body: { "name": "Admin", "email": "a@b.com", "username": "admin",
+           "password": "admin123", "phone": "01700000000", "role": "ADMIN" }
+   Response: { "token": "eyJhbGciOiJIUzI1NiJ9..." }
+
+3. Copy the token from response
+
+4. Access protected endpoints:
+   GET /api/medicines  (no token needed - public)
+   GET /api/users      (needs token)
+   Header: Authorization: Bearer <token>
+
+5. Test admin-only:
+    POST /api/medicines (needs token with ADMIN role)
+    Without token -> 403 Forbidden
+    With CUSTOMER token -> 403 Forbidden
+
+
+======================================================================
+12. RBAC - COMPLETE API ACCESS MATRIX
+======================================================================
+
+Roles: ADMIN, CUSTOMER
+
+Legend:
+  Public            = no token required
+  ADMIN / CUSTOMER  = both roles can access
+  ADMIN only        = ADMIN role only
+
+--- AUTH ---
+POST /api/auth/login            | Public
+POST /api/auth/register         | Public
+
+--- MEDICINES (/api/medicines) ---
+GET  /api/medicines              | Public
+GET  /api/medicines/{id}         | Public
+GET  /api/medicines/page         | Public
+GET  /api/medicines/name/{name}  | Public
+GET  /api/medicines/category/{category} | Public
+GET  /api/medicines/supplier/{supplierId} | Public
+GET  /api/medicines/batch/{batchId} | Public
+GET  /api/medicines/low-stock    | Public
+GET  /api/medicines/expired      | Public
+GET  /api/medicines/expiring-within | Public
+GET  /api/medicines/count        | Public
+POST /api/medicines              | Admin
+PUT  /api/medicines/{id}         | Admin
+PUT  /api/medicines/quantity     | Admin
+DELETE /api/medicines/{id}       | Admin
+
+--- SUPPLIERS (/api/suppliers) ---
+GET  /api/suppliers              | Public
+GET  /api/suppliers/{id}         | Public
+GET  /api/suppliers/page         | Public
+GET  /api/suppliers/phone/{phone}| Public
+GET  /api/suppliers/name/{name}  | Public
+GET  /api/suppliers/count        | Public
+GET  /api/suppliers/export/csv   | Public
+POST /api/suppliers              | Admin
+PUT  /api/suppliers/{id}         | Admin
+DELETE /api/suppliers/{id}       | Admin
+DELETE /api/suppliers/phone/{phone} | Admin
+DELETE /api/suppliers/name/{name}| Admin
+
+--- USERS (/api/users) ---
+GET  /api/users                  | ADMIN / CUSTOMER
+GET  /api/users/{id}             | ADMIN / CUSTOMER
+GET  /api/users/page             | ADMIN / CUSTOMER
+GET  /api/users/phone/{phone}    | ADMIN / CUSTOMER
+GET  /api/users/username/{username} | ADMIN / CUSTOMER
+GET  /api/users/count            | ADMIN / CUSTOMER
+POST /api/users                  | ADMIN only
+PUT  /api/users/{id}             | ADMIN only
+DELETE /api/users/{id}           | ADMIN only
+DELETE /api/users/phone/{phone}  | ADMIN only
+DELETE /api/users/username/{username} | ADMIN only
+
+--- ORDERS (/api/orders) ---
+GET  /api/orders                 | ADMIN / CUSTOMER
+GET  /api/orders/{id}            | ADMIN / CUSTOMER
+GET  /api/orders/page            | ADMIN / CUSTOMER
+GET  /api/orders/phone/{phone}   | ADMIN / CUSTOMER
+GET  /api/orders/status/{status} | ADMIN / CUSTOMER
+GET  /api/orders/count           | ADMIN / CUSTOMER
+POST /api/orders/save            | ADMIN / CUSTOMER
+POST /api/orders/return/{id}     | ADMIN / CUSTOMER
+PUT  /api/orders/{id}            | ADMIN only
+PUT  /api/orders/status/{id}     | ADMIN only
+DELETE /api/orders/{id}          | ADMIN only
+
+--- ORDER DETAILS (/api/order-details) ---
+GET  /api/order-details          | ADMIN / CUSTOMER
+GET  /api/order-details/{id}     | ADMIN / CUSTOMER
+GET  /api/order-details/page     | ADMIN / CUSTOMER
+GET  /api/order-details/order/{orderId} | ADMIN / CUSTOMER
+GET  /api/order-details/count    | ADMIN / CUSTOMER
+POST /api/order-details          | ADMIN / CUSTOMER
+PUT  /api/order-details/{id}     | ADMIN only
+DELETE /api/order-details/{id}   | ADMIN only
+DELETE /api/order-details/order/{orderId} | ADMIN only
+
+
+======================================================================
+13. HOW RBAC WORKS IN THIS IMPLEMENTATION
+======================================================================
+
+1. On login/register, JWT token contains a "role" claim:
+       { "sub": "admin", "role": "ADMIN", "userId": 1, ... }
+
+2. JwtAuthFilter extracts the token, reads the role claim,
+   and creates a SimpleGrantedAuthority("ROLE_ADMIN") or
+   SimpleGrantedAuthority("ROLE_CUSTOMER").
+
+3. Spring Security's SecurityFilterChain checks each request:
+   - .permitAll()     → no authentication needed
+   - .authenticated() → any valid token (any role)
+   - .hasRole("ADMIN")→ token must have ROLE_ADMIN authority
+
+4. If a CUSTOMER tries to access an Admin-only endpoint,
+   Spring returns 403 Forbidden automatically.
