@@ -3,9 +3,14 @@ package com.pharmacy.management.system.api;
 import com.pharmacy.management.system.domain.Supplier;
 import com.pharmacy.management.system.service.implementation.SupplierService;
 import jakarta.validation.Valid;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -103,4 +108,17 @@ public class SupplierApi {
         supplierService.deleteSupplierByName(name);
         return ResponseEntity.ok(Map.of("message", "Supplier deleted successfully"));
     }
+
+    @GetMapping("/export/csv")
+    public ResponseEntity<Resource> exportCsv() {
+        System.out.println("[SupplierApi] GET /api/suppliers/export/csv");
+        String fileName = supplierService.exportSuppliersToCsv();
+        File file = new File(fileName);
+        Resource resource = new FileSystemResource(file);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + file.getName())
+                .contentType(MediaType.parseMediaType("text/csv"))
+                .body(resource);
+    }
+
 }

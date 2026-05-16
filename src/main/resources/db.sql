@@ -43,7 +43,9 @@ CREATE TABLE IF NOT EXISTS medicines (
     batch_no           VARCHAR(50),
     manufacture_date   DATE,
     expiry_date        DATE,
-    created_date_time  DATETIME DEFAULT CURRENT_TIMESTAMP
+    supplier_id        INT,
+    created_date_time  DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (supplier_id) REFERENCES suppliers(id)
 );
 
 -- Create Orders Table (Status: PENDING, COMPLETED, CANCELLED, REFUNDED)

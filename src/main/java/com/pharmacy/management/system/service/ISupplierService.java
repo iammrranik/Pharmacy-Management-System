@@ -17,4 +17,5 @@ public interface ISupplierService {
     void deleteSupplier(int id);
     void deleteSupplierByPhone(String phone);
     void deleteSupplierByName(String name);
+    String exportSuppliersToCsv();
 }

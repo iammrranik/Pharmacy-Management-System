@@ -5,7 +5,9 @@ import com.pharmacy.management.system.repository.implementation.SupplierReposito
 import com.pharmacy.management.system.service.ISupplierService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -92,5 +94,28 @@ public class SupplierService implements ISupplierService {
     public void deleteSupplierByName(String name) {
         System.out.println("[SupplierService] deleteSupplierByName called for name: " + name);
         supplierRepository.deleteByName(name);
+    }
+
+    @Override
+    public String exportSuppliersToCsv() {
+        List<Supplier> suppliers = supplierRepository.findAll();
+        String fileName = "suppliers.csv";
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
+            writer.write("ID,Name,Contact Person,Email,Phone,Address\n");
+            for (Supplier supplier : suppliers) {
+                writer.write(String.format("%d,%s,%s,%s,%s,%s%n",
+                        supplier.getId(),
+                        supplier.getName(),
+                        supplier.getContactPersonName(),
+                        supplier.getEmail(),
+                        supplier.getPhone(),
+                        supplier.getAddress()));
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to export suppliers to CSV", e);
+        }
+
+        return fileName;
     }
 }

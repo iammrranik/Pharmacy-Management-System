@@ -1,5 +1,5 @@
 Pharmacy Management System
-==========================
+=========================
 
 1. User (Member) Management
 Base: /api/users
@@ -44,17 +44,18 @@ Delete Medicine | DELETE | /api/medicines/{id} | No body. Example: /api/medicine
 3. Supplier Management
 Base: /api/suppliers
 
-Fields: id, supplierName, contactPersonName, email, phone, address, createdDate
+Fields: id, name, contactPersonName, email, phone, address, createdDate
 
 Action | Method | Endpoint | Sample JSON Body / Parameters
-Add Supplier | POST | /api/suppliers | { "supplierName": "Square Pharma", "contactPersonName": "Mr. Kamal", "email": "square@mail.com", "phone": "01710000000", "address": "Dhaka" }
-Update Supplier | PUT | /api/suppliers | { "id": 1, "supplierName": "Square Pharma", "contactPersonName": "Mr. Kamal", "email": "square@mail.com", "phone": "01710000000", "address": "Dhaka" }
+Add Supplier | POST | /api/suppliers | { "name": "Square Pharma", "contactPersonName": "Mr. Kamal", "email": "square@mail.com", "phone": "01710000000", "address": "Dhaka" }
+Update Supplier | PUT | /api/suppliers | { "id": 1, "name": "Square Pharma", "contactPersonName": "Mr. Kamal", "email": "square@mail.com", "phone": "01710000000", "address": "Dhaka" }
 Get Supplier | GET | /api/suppliers/{id} | No body. Example: /api/suppliers/1
 Find by Phone | GET | /api/suppliers/phone/{phone} | No body. Example: /api/suppliers/phone/01710000000
 Find by Name | GET | /api/suppliers/name/{name} | No body. Example: /api/suppliers/name/Square
 List Suppliers | GET | /api/suppliers/page | Query: ?pageNo=1&pageSize=10
 List All | GET | /api/suppliers | No body. Returns list of all suppliers
 Count | GET | /api/suppliers/count | No body. Returns integer
+Export CSV | GET | /api/suppliers/export/csv | No body. Returns CSV file download
 Delete Supplier | DELETE | /api/suppliers/{id} | No body. Example: /api/suppliers/1
 Delete by Phone | DELETE | /api/suppliers/phone/{phone} | No body. Example: /api/suppliers/phone/01710000000
 Delete by Name | DELETE | /api/suppliers/name/{name} | No body. Example: /api/suppliers/name/Square
