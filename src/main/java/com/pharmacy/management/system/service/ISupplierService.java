@@ -9,12 +9,12 @@ public interface ISupplierService {
     Supplier saveSupplier(Supplier supplier);
     Optional<Supplier> findSupplierById(int id);
     Optional<Supplier> findSupplierByPhone(String phone);
-    List<Supplier> findSuppliersByName(String supplierName);
+    List<Supplier> findSuppliersByName(String name);
     List<Supplier> findAllSuppliers();
     List<Supplier> findAllSuppliersByPage(int pageNo, int pageSize);
     int countSuppliers();
     Supplier updateSupplier(Supplier supplier);
     void deleteSupplier(int id);
     void deleteSupplierByPhone(String phone);
-    void deleteSupplierByName(String supplierName);
+    void deleteSupplierByName(String name);
 }

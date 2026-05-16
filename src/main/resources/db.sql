@@ -2,10 +2,8 @@
 -- 1. DATABASE INITIALIZATION
 -- ==========================================
 
--- Create the database
 CREATE DATABASE IF NOT EXISTS pharmacydb;
 
--- Select the database to use
 USE pharmacydb;
 
 -- ==========================================
@@ -45,20 +43,20 @@ CREATE TABLE IF NOT EXISTS medicines (
     batch_no           VARCHAR(50),
     manufacture_date   DATE,
     expiry_date        DATE,
-    supplier_id        INT,
-    created_date_time  DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (supplier_id) REFERENCES suppliers(id)
+    created_date_time  DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create Orders Table (Status: PENDING, COMPLETED, CANCELLED, REFUNDED)
 CREATE TABLE IF NOT EXISTS orders (
-    id                 INT AUTO_INCREMENT PRIMARY KEY,
-    customer_phone     VARCHAR(20),
-    order_date_time    DATETIME DEFAULT CURRENT_TIMESTAMP,
-    total_amount       FLOAT NOT NULL,
-    status             VARCHAR(20) DEFAULT 'PENDING',
-    user_id            INT,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    id                INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id       INT NOT NULL,
+    customer_phone    VARCHAR(20),
+    order_date_time   DATETIME DEFAULT CURRENT_TIMESTAMP,
+    return_date_time  DATETIME,
+    total_amount      FLOAT NOT NULL,
+    refund_amount     FLOAT DEFAULT 0,
+    status            VARCHAR(20) DEFAULT 'PENDING',
+    seller_id         INT NOT NULL
 );
 
 -- Create OrderDetails Table
@@ -94,20 +92,20 @@ INSERT INTO suppliers (supplier_name, contact_person_name, email, phone, address
 ('ACI HealthCare', 'Mr. Jamil', 'aci.hc@aci.com', '02-445566', 'Narayanganj');
 
 -- Insert 5 sample Medicines
-INSERT INTO medicines (name, category, price, available_quantity, batch_no, manufacture_date, expiry_date, supplier_id) VALUES
-('Napa Extend', 'Tablet', 15.0, 500, 'B-102', '2024-01-10', '2026-12-31', 1),
-('Ace Syrup', 'Syrup', 85.0, 120, 'S-505', '2024-05-15', '2026-05-15', 2),
-('Fexo 120mg', 'Tablet', 10.0, 300, 'F-201', '2023-11-20', '2025-11-20', 3),
-('Seclo 20mg', 'Capsule', 7.0, 1000, 'C-303', '2024-02-05', '2026-02-05', 4),
-('Savlon Liquid', 'Antiseptic', 150.0, 45, 'L-909', '2024-03-12', '2027-03-12', 5);
+INSERT INTO medicines (name, category, price, available_quantity, batch_no, manufacture_date, expiry_date) VALUES
+('Napa Extend', 'Tablet', 15.0, 500, 'B-102', '2024-01-10', '2026-12-31'),
+('Ace Syrup', 'Syrup', 85.0, 120, 'S-505', '2024-05-15', '2026-05-15'),
+('Fexo 120mg', 'Tablet', 10.0, 300, 'F-201', '2023-11-20', '2025-11-20'),
+('Seclo 20mg', 'Capsule', 7.0, 1000, 'C-303', '2024-02-05', '2026-02-05'),
+('Savlon Liquid', 'Antiseptic', 150.0, 45, 'L-909', '2024-03-12', '2027-03-12');
 
--- Insert 5 sample Orders
-INSERT INTO orders (customer_phone, total_amount, status, user_id) VALUES
-('01700112233', 100.0, 'COMPLETED', 1),
-('01900445566', 255.0, 'PENDING', 3),
-('01800778899', 45.0, 'CANCELLED', 1),
-('01500223344', 300.0, 'REFUNDED', 3),
-('01600556677', 150.0, 'COMPLETED', 1);
+-- Insert 5 sample Orders (customer_id, seller_id refer to users.id)
+INSERT INTO orders (customer_id, customer_phone, total_amount, status, seller_id) VALUES
+(2, '01700112233', 100.0, 'COMPLETED', 1),
+(4, '01900445566', 255.0, 'PENDING', 3),
+(2, '01800778899', 45.0, 'CANCELLED', 1),
+(4, '01500223344', 300.0, 'REFUNDED', 3),
+(5, '01600556677', 150.0, 'COMPLETED', 1);
 
 -- Insert 5 sample OrderDetails
 INSERT INTO order_details (order_id, medicine_id, quantity, unit_price) VALUES
@@ -144,6 +142,3 @@ UPDATE medicines SET available_quantity = 600 WHERE id = 1;
 -- DROP TABLE IF EXISTS suppliers;
 -- DROP TABLE IF EXISTS users;
 -- DROP DATABASE IF EXISTS pharmacydb;
-
-
-

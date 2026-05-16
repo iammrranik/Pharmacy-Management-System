@@ -1,0 +1,95 @@
+Pharmacy Management System
+==========================
+
+1. User (Member) Management
+Base: /api/users
+
+Fields: id, name, email, username, password, phone, role (ADMIN|CUSTOMER), createdDate
+
+Action | Method | Endpoint | Sample JSON Body / Parameters
+Add User | POST | /api/users | { "name": "Arif Ahmed", "email": "arif@mail.com", "username": "arif", "password": "pass123", "phone": "01711223344", "role": "CUSTOMER" }
+Update User | PUT | /api/users | { "id": 1, "name": "Arif Rahman", "email": "arif.new@mail.com", "username": "arif", "password": "pass123", "phone": "01711223344", "role": "CUSTOMER" }
+Get User | GET | /api/users/{id} | No body. Example: /api/users/1
+Get User by Phone | GET | /api/users/phone/{phone} | No body. Example: /api/users/phone/01711223344
+Get User by Username | GET | /api/users/username/{username} | No body. Example: /api/users/username/arif
+List Users | GET | /api/users/page | Query: ?pageNo=1&pageSize=10
+List All | GET | /api/users | No body. Returns list of all users
+Count Users | GET | /api/users/count | No body. Returns integer
+Delete User | DELETE | /api/users/{id} | No body. Example: /api/users/1
+Delete by Phone | DELETE | /api/users/phone/{phone} | No body. Example: /api/users/phone/01711223344
+Delete by Username | DELETE | /api/users/username/{username} | No body. Example: /api/users/username/arif
+
+2. Medicine Management
+Base: /api/medicines
+
+Fields: id, name, category, price, availableQuantity, batchNo, manufactureDate, expiryDate, createdDateTime
+
+Action | Method | Endpoint | Sample JSON Body / Parameters
+Add Medicine | POST | /api/medicines | { "name": "Napa Extra", "category": "Painkiller", "price": 30.0, "availableQuantity": 100, "batchNo": "B-123", "manufactureDate": "2025-01-01", "expiryDate": "2027-01-01" }
+Update Medicine | PUT | /api/medicines | { "id": 1, "name": "Napa Extra", "category": "Painkiller", "price": 35.0, "availableQuantity": 90, "batchNo": "B-123", "manufactureDate": "2025-01-01", "expiryDate": "2027-01-01" }
+Update Quantity | PUT | /api/medicines/quantity | Query: ?medicineId=1&quantity=50
+Get Medicine | GET | /api/medicines/{id} | No body. Example: /api/medicines/1
+Find by Name | GET | /api/medicines/name/{name} | No body. Example: /api/medicines/name/Napa
+Find by Category | GET | /api/medicines/category/{category} | No body. Example: /api/medicines/category/Painkiller
+Find by Supplier | GET | /api/medicines/supplier/{supplierId} | No body. Example: /api/medicines/supplier/1
+Find by Batch | GET | /api/medicines/batch/{batchId} | No body. Example: /api/medicines/batch/1
+List Medicines | GET | /api/medicines/page | Query: ?pageNo=1&pageSize=10
+List All | GET | /api/medicines | No body. Returns list of all medicines
+Count | GET | /api/medicines/count | No body. Returns integer
+Low Stock | GET | /api/medicines/low-stock | Query: ?quantity=10
+Expired | GET | /api/medicines/expired | No body. Returns list of expired medicines
+Expiring Within | GET | /api/medicines/expiring-within | Query: ?days=30
+Delete Medicine | DELETE | /api/medicines/{id} | No body. Example: /api/medicines/1
+
+3. Supplier Management
+Base: /api/suppliers
+
+Fields: id, supplierName, contactPersonName, email, phone, address, createdDate
+
+Action | Method | Endpoint | Sample JSON Body / Parameters
+Add Supplier | POST | /api/suppliers | { "supplierName": "Square Pharma", "contactPersonName": "Mr. Kamal", "email": "square@mail.com", "phone": "01710000000", "address": "Dhaka" }
+Update Supplier | PUT | /api/suppliers | { "id": 1, "supplierName": "Square Pharma", "contactPersonName": "Mr. Kamal", "email": "square@mail.com", "phone": "01710000000", "address": "Dhaka" }
+Get Supplier | GET | /api/suppliers/{id} | No body. Example: /api/suppliers/1
+Find by Phone | GET | /api/suppliers/phone/{phone} | No body. Example: /api/suppliers/phone/01710000000
+Find by Name | GET | /api/suppliers/name/{name} | No body. Example: /api/suppliers/name/Square
+List Suppliers | GET | /api/suppliers/page | Query: ?pageNo=1&pageSize=10
+List All | GET | /api/suppliers | No body. Returns list of all suppliers
+Count | GET | /api/suppliers/count | No body. Returns integer
+Delete Supplier | DELETE | /api/suppliers/{id} | No body. Example: /api/suppliers/1
+Delete by Phone | DELETE | /api/suppliers/phone/{phone} | No body. Example: /api/suppliers/phone/01710000000
+Delete by Name | DELETE | /api/suppliers/name/{name} | No body. Example: /api/suppliers/name/Square
+
+4. Order Management
+Base: /api/orders
+
+Fields: id, customerId, customerPhone, orderDateTime, returnDateTime, totalAmount, refundAmount, status (PENDING|COMPLETED|CANCELLED|REFUNDED), sellerId
+
+Action | Method | Endpoint | Sample JSON Body / Parameters
+Create Order | POST | /api/orders | { "customerId": 1, "customerPhone": "01711223344", "totalAmount": 300.0, "status": "COMPLETED", "sellerId": 2 }
+Save Order | POST | /api/orders/save | { "customerId": 1, "customerPhone": "01711223344", "totalAmount": 300.0, "status": "PENDING", "sellerId": 2 }
+Return Medicine | POST | /api/orders/return/{id} | No body. Example: /api/orders/return/1
+Get Order | GET | /api/orders/{id} | No body. Example: /api/orders/1
+Find by Phone | GET | /api/orders/phone/{phone} | No body. Example: /api/orders/phone/01711223344
+Find by Status | GET | /api/orders/status/{status} | No body. Example: /api/orders/status/PENDING
+List Orders | GET | /api/orders/page | Query: ?pageNo=1&pageSize=10
+List All | GET | /api/orders | No body. Returns list of all orders
+Count | GET | /api/orders/count | No body. Returns integer
+Update Order | PUT | /api/orders | { "id": 1, "customerId": 1, "customerPhone": "01711223344", "totalAmount": 350.0, "status": "COMPLETED", "sellerId": 2 }
+Update Status | PUT | /api/orders/status/{id} | Query: ?status=COMPLETED. Example: /api/orders/status/1?status=REFUNDED
+Delete Order | DELETE | /api/orders/{id} | No body. Example: /api/orders/1
+
+5. Order Details
+Base: /api/order-details
+
+Fields: id, orderId, medicineId, quantity, unitPrice
+
+Action | Method | Endpoint | Sample JSON Body / Parameters
+Add Detail | POST | /api/order-details | { "orderId": 1, "medicineId": 1, "quantity": 2, "unitPrice": 30.0 }
+Update Detail | PUT | /api/order-details | { "id": 1, "orderId": 1, "medicineId": 1, "quantity": 3, "unitPrice": 30.0 }
+Get Detail | GET | /api/order-details/{id} | No body. Example: /api/order-details/1
+Find by Order | GET | /api/order-details/order/{orderId} | No body. Example: /api/order-details/order/1
+List Details | GET | /api/order-details/page | Query: ?pageNo=1&pageSize=10
+List All | GET | /api/order-details | No body. Returns list of all order details
+Count | GET | /api/order-details/count | No body. Returns integer
+Delete Detail | DELETE | /api/order-details/{id} | No body. Example: /api/order-details/1
+Delete by Order | DELETE | /api/order-details/order/{orderId} | No body. Example: /api/order-details/order/1

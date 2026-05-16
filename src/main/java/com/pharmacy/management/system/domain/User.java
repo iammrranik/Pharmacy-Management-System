@@ -1,53 +1,32 @@
 package com.pharmacy.management.system.domain;
 
 import com.pharmacy.management.system.domain.enums.UserRole;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 
-public class User {
-    private int id;
-    private String name;
-    private String email;
-    private String username;
-    private String password;
-    private String phone;
-    private UserRole role;
-    private LocalDateTime createdDate;
+public class User extends Person {
 
-    public User(int id, String name, String email, String username,
+    @NotBlank(message = "Username is required")
+    private String username;
+
+    @NotBlank(message = "Password is required")
+    @Size(min = 6, message = "Password must be at least 6 characters")
+    private String password;
+
+    @NotNull(message = "Role is required")
+    private UserRole role;
+
+    public User() {}
+
+    public User(Integer id, String name, String email, String username,
                 String password, String phone, UserRole role, LocalDateTime createdDate) {
-        this.setId(id);
-        this.setName(name);
-        this.setEmail(email);
+        super(id, name, email, phone, createdDate);
         this.setUsername(username);
         this.setPassword(password);
-        this.setPhone(phone);
         this.setRole(role);
-        this.setCreatedDate(createdDate);
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public String getUsername() {
@@ -66,14 +45,6 @@ public class User {
         this.password = password;
     }
 
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
     public UserRole getRole() {
         return role;
     }
@@ -82,18 +53,10 @@ public class User {
         this.role = role;
     }
 
-    public LocalDateTime getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(LocalDateTime createdDate) {
-        this.createdDate = createdDate;
-    }
-
     @Override
     public String toString() {
-        return "User{" + "id=" + id + ", name=" + name + ", email=" + email +
-                ", username=" + username + ", password=" + password + ", phone=" + phone +
-                ", role=" + role + ", createdDate=" + createdDate + '}';
+        return "User{" + "id=" + getId() + ", name=" + getName() + ", email=" + getEmail() +
+                ", username=" + username + ", password=" + password + ", phone=" + getPhone() +
+                ", role=" + role + ", createdDate=" + getCreatedDate() + '}';
     }
 }

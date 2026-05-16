@@ -6,11 +6,11 @@ import com.pharmacy.management.system.service.ISupplierService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Service
-@Transactional
 public class SupplierService implements ISupplierService {
     private final SupplierRepository supplierRepository;
 
@@ -19,55 +19,54 @@ public class SupplierService implements ISupplierService {
     }
 
     @Override
+    @Transactional
     public Supplier saveSupplier(Supplier supplier) {
-        System.out.println("[SupplierService] saveSupplier called for: " + supplier.getSupplierName());
+        if (supplier.getCreatedDate() == null) {
+            supplier.setCreatedDate(LocalDateTime.now());
+        }
+        System.out.println("[SupplierService] saveSupplier called for: " + supplier.getName());
         supplierRepository.save(supplier);
         return supplier;
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Optional<Supplier> findSupplierById(int id) {
         System.out.println("[SupplierService] findSupplierById called for id: " + id);
         return supplierRepository.findById(id);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Optional<Supplier> findSupplierByPhone(String phone) {
         System.out.println("[SupplierService] findSupplierByPhone called for phone: " + phone);
         return supplierRepository.findByPhone(phone);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<Supplier> findSuppliersByName(String supplierName) {
-        System.out.println("[SupplierService] findSuppliersByName called for name: " + supplierName);
-        return supplierRepository.findBySupplierName(supplierName);
+    public List<Supplier> findSuppliersByName(String name) {
+        System.out.println("[SupplierService] findSuppliersByName called for name: " + name);
+        return supplierRepository.findByName(name);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<Supplier> findAllSuppliers() {
         System.out.println("[SupplierService] findAllSuppliers called");
         return supplierRepository.findAll();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<Supplier> findAllSuppliersByPage(int pageNo, int pageSize) {
         System.out.println("[SupplierService] findAllSuppliersByPage called - page: " + pageNo + ", size: " + pageSize);
         return supplierRepository.findAllByPage(pageNo, pageSize);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public int countSuppliers() {
         System.out.println("[SupplierService] countSuppliers called");
         return supplierRepository.count();
     }
 
     @Override
+    @Transactional
     public Supplier updateSupplier(Supplier supplier) {
         System.out.println("[SupplierService] updateSupplier called for id: " + supplier.getId());
         supplierRepository.update(supplier);
@@ -75,20 +74,23 @@ public class SupplierService implements ISupplierService {
     }
 
     @Override
+    @Transactional
     public void deleteSupplier(int id) {
         System.out.println("[SupplierService] deleteSupplier called for id: " + id);
         supplierRepository.delete(id);
     }
 
     @Override
+    @Transactional
     public void deleteSupplierByPhone(String phone) {
         System.out.println("[SupplierService] deleteSupplierByPhone called for phone: " + phone);
         supplierRepository.deleteByPhone(phone);
     }
 
     @Override
-    public void deleteSupplierByName(String supplierName) {
-        System.out.println("[SupplierService] deleteSupplierByName called for name: " + supplierName);
-        supplierRepository.deleteBySupplierName(supplierName);
+    @Transactional
+    public void deleteSupplierByName(String name) {
+        System.out.println("[SupplierService] deleteSupplierByName called for name: " + name);
+        supplierRepository.deleteByName(name);
     }
 }

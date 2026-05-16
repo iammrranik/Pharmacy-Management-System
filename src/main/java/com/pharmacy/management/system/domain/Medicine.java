@@ -1,20 +1,42 @@
 package com.pharmacy.management.system.domain;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class Medicine {
-    private int  id;
+    private Integer id;
+
+    @NotBlank(message = "Medicine name is required")
     private String name;
+
+    @NotBlank(message = "Category is required")
     private String category;
+
+    @Positive(message = "Price must be positive")
     private float price;
+
+    @Min(value = 0, message = "Available quantity must be zero or positive")
     private int availableQuantity;
+
+    @NotBlank(message = "Batch number is required")
     private String batchNo;
+
+    @NotNull(message = "Manufacture date is required")
     private LocalDate manufactureDate;
+
+    @NotNull(message = "Expiry date is required")
     private LocalDate expiryDate;
+
     private LocalDateTime createdDateTime;
 
-    public Medicine(int id, String name, String category, float price,
+    public Medicine() {}
+
+    public Medicine(Integer id, String name, String category, float price,
                     int availableQuantity, String batchNo,
                     LocalDate manufactureDate, LocalDate expiryDate, LocalDateTime createdDateTime) {
         this.setId(id);
@@ -28,11 +50,11 @@ public class Medicine {
         this.setCreatedDateTime(createdDateTime);
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 

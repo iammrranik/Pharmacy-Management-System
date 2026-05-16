@@ -1,41 +1,24 @@
 package com.pharmacy.management.system.domain;
 
+import jakarta.validation.constraints.NotBlank;
+
 import java.time.LocalDateTime;
 
-public class Supplier {
-    private int id;
-    private String supplierName;
+public class Supplier extends Person {
+
+    @NotBlank(message = "Contact person name is required")
     private String contactPersonName;
-    private String email;
-    private String phone;
+
+    @NotBlank(message = "Address is required")
     private String address;
-    private LocalDateTime createdDate;
 
-    public Supplier(int id, String supplierName, String contactPersonName,
+    public Supplier() {}
+
+    public Supplier(Integer id, String name, String contactPersonName,
                     String email, String phone, String address, LocalDateTime createdDate) {
-        this.setId(id);
-        this.setSupplierName(supplierName);
+        super(id, name, email, phone, createdDate);
         this.setContactPersonName(contactPersonName);
-        this.setEmail(email);
-        this.setPhone(phone);
         this.setAddress(address);
-        this.setCreatedDate(createdDate);
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getSupplierName() {
-        return supplierName;
-    }
-
-    public void setSupplierName(String supplierName) {
-        this.supplierName = supplierName;
     }
 
     public String getContactPersonName() {
@@ -46,22 +29,6 @@ public class Supplier {
         this.contactPersonName = contactPersonName;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
     public String getAddress() {
         return address;
     }
@@ -70,19 +37,11 @@ public class Supplier {
         this.address = address;
     }
 
-    public LocalDateTime getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(LocalDateTime createdDate) {
-        this.createdDate = createdDate;
-    }
-
     @Override
     public String toString() {
-        return "Supplier{" + "id=" + id + ", supplierName=" + supplierName +
-                ", contactPersonName=" + contactPersonName + ", email=" + email +
-                ", phone=" + phone + ", address=" + address +
-                ", createdDate=" + createdDate + '}';
+        return "Supplier{" + "id=" + getId() + ", name=" + getName() +
+                ", contactPersonName=" + contactPersonName + ", email=" + getEmail() +
+                ", phone=" + getPhone() + ", address=" + address +
+                ", createdDate=" + getCreatedDate() + '}';
     }
 }

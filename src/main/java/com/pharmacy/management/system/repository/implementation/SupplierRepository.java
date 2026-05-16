@@ -23,18 +23,17 @@ public class SupplierRepository implements ISupplierRepository {
     @Override
     public int save(Supplier supplier) {
         String sql = """
-                INSERT INTO suppliers (supplier_name, contact_person_name, email, phone, address, created_date)
-                VALUES (:supplierName, :contactPersonName, :email, :phone, :address, :createdDate)
+                INSERT INTO suppliers (supplier_name, contact_person_name, email, phone, address)
+                VALUES (:supplierName, :contactPersonName, :email, :phone, :address)
                 """;
         MapSqlParameterSource params = new MapSqlParameterSource();
-        params.addValue("supplierName", supplier.getSupplierName());
+        params.addValue("supplierName", supplier.getName());
         params.addValue("contactPersonName", supplier.getContactPersonName());
         params.addValue("email", supplier.getEmail());
         params.addValue("phone", supplier.getPhone());
         params.addValue("address", supplier.getAddress());
-        params.addValue("createdDate", supplier.getCreatedDate());
 
-        System.out.println("[SupplierRepository] save called for supplier: " + supplier.getSupplierName());
+        System.out.println("[SupplierRepository] save called for supplier: " + supplier.getName());
         return namedParameterJdbcTemplate.update(sql, params);
     }
 
@@ -65,15 +64,15 @@ public class SupplierRepository implements ISupplierRepository {
     }
 
     @Override
-    public List<Supplier> findBySupplierName(String supplierName) {
+    public List<Supplier> findByName(String name) {
         String sql = """
                 SELECT *
                 FROM suppliers
                 WHERE supplier_name LIKE :supplierName
                 ORDER BY id
                 """;
-        MapSqlParameterSource params = new MapSqlParameterSource("supplierName", "%" + supplierName + "%");
-        System.out.println("[SupplierRepository] findBySupplierName called for name: " + supplierName);
+        MapSqlParameterSource params = new MapSqlParameterSource("supplierName", "%" + name + "%");
+        System.out.println("[SupplierRepository] findByName called for name: " + name);
         return namedParameterJdbcTemplate.query(sql, params, supplierMapper);
     }
 
@@ -129,7 +128,7 @@ public class SupplierRepository implements ISupplierRepository {
                 """;
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("id", supplier.getId());
-        params.addValue("supplierName", supplier.getSupplierName());
+        params.addValue("supplierName", supplier.getName());
         params.addValue("contactPersonName", supplier.getContactPersonName());
         params.addValue("email", supplier.getEmail());
         params.addValue("phone", supplier.getPhone());
@@ -164,14 +163,14 @@ public class SupplierRepository implements ISupplierRepository {
     }
 
     @Override
-    public int deleteBySupplierName(String supplierName) {
+    public int deleteByName(String name) {
         String sql = """
                 DELETE
                 FROM suppliers
                 WHERE supplier_name = :supplierName
                 """;
-        MapSqlParameterSource params = new MapSqlParameterSource("supplierName", supplierName);
-        System.out.println("[SupplierRepository] deleteBySupplierName called for name: " + supplierName);
+        MapSqlParameterSource params = new MapSqlParameterSource("supplierName", name);
+        System.out.println("[SupplierRepository] deleteByName called for name: " + name);
         return namedParameterJdbcTemplate.update(sql, params);
     }
 }

@@ -1,21 +1,39 @@
 package com.pharmacy.management.system.domain;
 
 import com.pharmacy.management.system.domain.enums.OrderStatus;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 
 import java.time.LocalDateTime;
 
 public class Order {
-    private int id;
+    private Integer id;
+
+    @Min(value = 1, message = "Customer ID is required")
     private int customerId;
+
+    @NotBlank(message = "Customer phone is required")
     private String customerPhone;
+
     private LocalDateTime orderDateTime;
     private LocalDateTime returnDateTime;
+
+    @PositiveOrZero(message = "Total amount must be zero or positive")
     private float totalAmount;
+
     private float refundAmount = 0;
+
+    @NotNull(message = "Status is required")
     private OrderStatus status;
+
+    @Min(value = 1, message = "Seller ID is required")
     private int sellerId;
 
-    public Order(int id, int customerId, String customerPhone, LocalDateTime orderDateTime,
+    public Order() {}
+
+    public Order(Integer id, int customerId, String customerPhone, LocalDateTime orderDateTime,
                  LocalDateTime returnDateTime, float totalAmount, float refundAmount,
                  OrderStatus status, int sellerId) {
         this.setId(id);
@@ -29,11 +47,11 @@ public class Order {
         this.setSellerId(sellerId);
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 

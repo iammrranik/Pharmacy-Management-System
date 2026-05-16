@@ -23,8 +23,8 @@ public class UserRepository implements IUserRepository {
     @Override
     public int save(User user) {
         String sql = """
-                INSERT INTO users (name, email, username, password, phone, role, created_date_time)
-                VALUES (:name, :email, :username, :password, :phone, :role, :createdDateTime)
+                INSERT INTO users (name, email, username, password, phone, role)
+                VALUES (:name, :email, :username, :password, :phone, :role)
                 """;
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("name", user.getName());
@@ -33,7 +33,6 @@ public class UserRepository implements IUserRepository {
         params.addValue("password", user.getPassword());
         params.addValue("phone", user.getPhone());
         params.addValue("role", user.getRole().name());
-        params.addValue("createdDateTime", user.getCreatedDate());
 
         System.out.println("[UserRepository] save called for username: " + user.getUsername());
         return namedParameterJdbcTemplate.update(sql, params);

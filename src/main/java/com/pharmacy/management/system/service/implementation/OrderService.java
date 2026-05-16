@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@Transactional
 public class OrderService implements IOrderService {
     private final OrderRepository orderRepository;
     private final OrderDetailsRepository orderDetailsRepository;
@@ -32,6 +31,7 @@ public class OrderService implements IOrderService {
     }
 
     @Override
+    @Transactional
     public Order createOrder(Order order, List<OrderDetails> orderDetails) {
         System.out.println("[OrderService] createOrder called for customer: " + order.getCustomerPhone());
         orderRepository.save(order);
@@ -43,6 +43,7 @@ public class OrderService implements IOrderService {
     }
 
     @Override
+    @Transactional
     public Order saveOrder(Order order) {
         System.out.println("[OrderService] saveOrder called for customer: " + order.getCustomerPhone());
         orderRepository.save(order);
@@ -50,48 +51,43 @@ public class OrderService implements IOrderService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Optional<Order> findOrderById(int id) {
         System.out.println("[OrderService] findOrderById called for id: " + id);
         return orderRepository.findById(id);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<Order> findOrdersByCustomerPhone(String phone) {
         System.out.println("[OrderService] findOrdersByCustomerPhone called for phone: " + phone);
         return orderRepository.findByCustomerPhone(phone);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<Order> findOrdersByStatus(OrderStatus status) {
         System.out.println("[OrderService] findOrdersByStatus called for status: " + status);
         return orderRepository.findByStatus(status);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<Order> findAllOrders() {
         System.out.println("[OrderService] findAllOrders called");
         return orderRepository.findAll();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<Order> findAllOrdersByPage(int pageNo, int pageSize) {
         System.out.println("[OrderService] findAllOrdersByPage called - page: " + pageNo + ", size: " + pageSize);
         return orderRepository.findAllByPage(pageNo, pageSize);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public int countOrders() {
         System.out.println("[OrderService] countOrders called");
         return orderRepository.count();
     }
 
     @Override
+    @Transactional
     public Order updateOrder(Order order) {
         System.out.println("[OrderService] updateOrder called for id: " + order.getId());
         orderRepository.update(order);
@@ -99,6 +95,7 @@ public class OrderService implements IOrderService {
     }
 
     @Override
+    @Transactional
     public void deleteOrder(int id) {
         System.out.println("[OrderService] deleteOrder called for id: " + id);
         orderDetailsRepository.deleteByOrderId(id);
@@ -106,6 +103,7 @@ public class OrderService implements IOrderService {
     }
 
     @Override
+    @Transactional
     public Order updateOrderStatus(int id, OrderStatus status) {
         System.out.println("[OrderService] updateOrderStatus called for id: " + id + ", status: " + status);
         Order order = orderRepository.findById(id)
@@ -116,6 +114,7 @@ public class OrderService implements IOrderService {
     }
 
     @Override
+    @Transactional
     public Order returnMedicine(int id) {
         System.out.println("[OrderService] returnMedicine called for id: " + id);
         Order order = orderRepository.findById(id)

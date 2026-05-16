@@ -24,9 +24,9 @@ public class MedicineRepository implements IMedicineRepository {
     public int save(Medicine medicine) {
         String sql = """
                 INSERT INTO medicines (name, category, price, available_quantity, batch_no,
-                                       manufacture_date, expiry_date, created_date_time)
+                                       manufacture_date, expiry_date)
                 VALUES (:name, :category, :price, :availableQuantity, :batchNo,
-                        :manufactureDate, :expiryDate, :createdDateTime)
+                        :manufactureDate, :expiryDate)
                 """;
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("name", medicine.getName());
@@ -36,7 +36,6 @@ public class MedicineRepository implements IMedicineRepository {
         params.addValue("batchNo", medicine.getBatchNo());
         params.addValue("manufactureDate", medicine.getManufactureDate());
         params.addValue("expiryDate", medicine.getExpiryDate());
-        params.addValue("createdDateTime", medicine.getCreatedDateTime());
 
         System.out.println("[MedicineRepository] save called for medicine: " + medicine.getName());
         return namedParameterJdbcTemplate.update(sql, params);

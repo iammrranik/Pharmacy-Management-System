@@ -1,13 +1,26 @@
 package com.pharmacy.management.system.domain;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
+
 public class OrderDetails {
-    private int id;
+    private Integer id;
+
+    @Min(value = 1, message = "Order ID is required")
     private int orderId;
+
+    @Min(value = 1, message = "Medicine ID is required")
     private int medicineId;
+
+    @Min(value = 1, message = "Quantity must be at least 1")
     private int quantity;
+
+    @Positive(message = "Unit price must be positive")
     private float unitPrice;
 
-    public OrderDetails(int id, int orderId, int medicineId, int quantity, float unitPrice) {
+    public OrderDetails() {}
+
+    public OrderDetails(Integer id, int orderId, int medicineId, int quantity, float unitPrice) {
         this.setId(id);
         this.setOrderId(orderId);
         this.setMedicineId(medicineId);
@@ -15,11 +28,11 @@ public class OrderDetails {
         this.setUnitPrice(unitPrice);
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 

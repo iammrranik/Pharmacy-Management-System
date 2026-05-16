@@ -24,17 +24,16 @@ public class OrderRepository implements IOrderRepository {
     @Override
     public int save(Order order) {
         String sql = """
-                INSERT INTO orders (customer_id, customer_phone, order_date_time,
+                INSERT INTO orders (customer_id, customer_phone,
                                     return_date_time, total_amount, refund_amount,
                                     status, seller_id)
-                VALUES (:customerId, :customerPhone, :orderDateTime,
+                VALUES (:customerId, :customerPhone,
                         :returnDateTime, :totalAmount, :refundAmount,
                         :status, :sellerId)
                 """;
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("customerId", order.getCustomerId());
         params.addValue("customerPhone", order.getCustomerPhone());
-        params.addValue("orderDateTime", order.getOrderDateTime());
         params.addValue("returnDateTime", order.getReturnDateTime());
         params.addValue("totalAmount", order.getTotalAmount());
         params.addValue("refundAmount", order.getRefundAmount());
