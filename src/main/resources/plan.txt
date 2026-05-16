@@ -200,27 +200,29 @@ will fail login. Either:
             http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                    // Public endpoints
+                    // ========== Public (no token required) ==========
                     .requestMatchers("/api/auth/**").permitAll()
 
-                    // Public read-only for medicines and suppliers
+                    // Public - GET medicines and suppliers (read-only for everyone)
                     .requestMatchers(HttpMethod.GET, "/api/medicines/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/suppliers/**").permitAll()
 
-                    // Authenticated (any role)
+                    // ========== ADMIN / CUSTOMER (both roles) ==========
+                    // Users - GET only
                     .requestMatchers(HttpMethod.GET, "/api/users/**").authenticated()
+                    // Orders - GET and POST
                     .requestMatchers(HttpMethod.GET, "/api/orders/**").authenticated()
-                    .requestMatchers(HttpMethod.GET, "/api/order-details/**").authenticated()
-
-                    // POST requires authentication
                     .requestMatchers(HttpMethod.POST, "/api/orders/**").authenticated()
+                    // Order Details - GET and POST
+                    .requestMatchers(HttpMethod.GET, "/api/order-details/**").authenticated()
                     .requestMatchers(HttpMethod.POST, "/api/order-details/**").authenticated()
 
-                    // Admin only (modify operations)
+                    // ========== ADMIN only ==========
+                    // Create/update/delete medicines, suppliers, users
                     .requestMatchers(HttpMethod.POST, "/api/medicines/**").hasRole("ADMIN")
                     .requestMatchers(HttpMethod.POST, "/api/suppliers/**").hasRole("ADMIN")
                     .requestMatchers(HttpMethod.POST, "/api/users/**").hasRole("ADMIN")
-
+                    // All PUT and DELETE across the entire API
                     .requestMatchers(HttpMethod.PUT, "/api/**").hasRole("ADMIN")
                     .requestMatchers(HttpMethod.DELETE, "/api/**").hasRole("ADMIN")
 
@@ -408,10 +410,10 @@ GET  /api/medicines/low-stock    | Public
 GET  /api/medicines/expired      | Public
 GET  /api/medicines/expiring-within | Public
 GET  /api/medicines/count        | Public
-POST /api/medicines              | Admin
-PUT  /api/medicines/{id}         | Admin
-PUT  /api/medicines/quantity     | Admin
-DELETE /api/medicines/{id}       | Admin
+POST /api/medicines              | ADMIN only
+PUT  /api/medicines/{id}         | ADMIN only
+PUT  /api/medicines/quantity     | ADMIN only
+DELETE /api/medicines/{id}       | ADMIN only
 
 --- SUPPLIERS (/api/suppliers) ---
 GET  /api/suppliers              | Public
@@ -421,11 +423,11 @@ GET  /api/suppliers/phone/{phone}| Public
 GET  /api/suppliers/name/{name}  | Public
 GET  /api/suppliers/count        | Public
 GET  /api/suppliers/export/csv   | Public
-POST /api/suppliers              | Admin
-PUT  /api/suppliers/{id}         | Admin
-DELETE /api/suppliers/{id}       | Admin
-DELETE /api/suppliers/phone/{phone} | Admin
-DELETE /api/suppliers/name/{name}| Admin
+POST /api/suppliers              | ADMIN only
+PUT  /api/suppliers/{id}         | ADMIN only
+DELETE /api/suppliers/{id}       | ADMIN only
+DELETE /api/suppliers/phone/{phone} | ADMIN only
+DELETE /api/suppliers/name/{name}| ADMIN only
 
 --- USERS (/api/users) ---
 GET  /api/users                  | ADMIN / CUSTOMER
